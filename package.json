@@ -1,0 +1,45 @@
+{
+  "name": "find-space",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "dotenv": "^17.4.2",
+      "zod": "^4.4.3",
+      "typescript": "^6.0.3",
+      "@types/node": "^26.2.0",
+      "lucide-react": "^1.27.0",
+      "next-themes": "^0.4.6",
+      "react": "^19.2.8",
+      "react-dom": "^19.2.8",
+      "sonner": "^2.0.7",
+      "@types/react": "^19.2.17",
+      "@types/react-dom": "^19.2.3",
+      "tailwindcss": "^4.3.3"
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "build": "bun run --filter '*' build",
+    "check-types": "bun run --filter '*' check-types",
+    "dev:web": "bun run --filter web dev:bare",
+    "deploy": "bun run --filter @find-space/infra deploy",
+    "destroy": "bun run --filter @find-space/infra destroy"
+  },
+  "dependencies": {
+    "@find-space/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260728.1",
+    "@find-space/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "packageManager": "bun@1.4.0"
+}

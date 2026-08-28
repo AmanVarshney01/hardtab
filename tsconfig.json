@@ -1,0 +1,3 @@
+{
+  "extends": "@find-space/config/tsconfig.base.json"
+}
