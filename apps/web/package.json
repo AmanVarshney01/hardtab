@@ -11,8 +11,14 @@
     "dev:bare": "vite dev"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.11.0",
+    "@codemirror/lang-java": "^6.0.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.9",
     "@find-space/env": "workspace:*",
     "@find-space/ui": "workspace:*",
+    "@lezer/highlight": "^1.2.3",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-router": "^1.170.18",
     "dotenv": "catalog:",

@@ -1,1 +1,116 @@
 @import "@find-space/ui/globals.css";
+
+@theme inline {
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-amber: var(--amber);
+  --color-squiggle: var(--squiggle);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+}
+
+/* Palette: Ink slate / Paper / Checkstyle amber / Squiggle red */
+:root,
+.dark {
+  --ink: #1c2030;
+  --ink-2: #242938;
+  --ink-3: #2f3547;
+  --paper: #e9e4d8;
+  --amber: #f2b544;
+  --squiggle: #e5484d;
+  --mute: #8b90a0;
+
+  --background: var(--ink);
+  --foreground: var(--paper);
+  --card: var(--ink-2);
+  --card-foreground: var(--paper);
+  --popover: var(--ink-2);
+  --popover-foreground: var(--paper);
+  --primary: var(--amber);
+  --primary-foreground: #1a1405;
+  --secondary: var(--ink-3);
+  --secondary-foreground: var(--paper);
+  --muted: var(--ink-2);
+  --muted-foreground: var(--mute);
+  --accent: var(--ink-3);
+  --accent-foreground: var(--paper);
+  --destructive: var(--squiggle);
+  --border: #343a4d;
+  --input: #343a4d;
+  --ring: var(--amber);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+}
+
+.display {
+  font-family: var(--font-sans);
+  font-variation-settings: "wdth" 100, "opsz" 96;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  font-weight: 700;
+}
+
+.squiggle {
+  text-decoration: underline wavy var(--squiggle);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+/* ---------- CodeMirror ---------- */
+.cm-editor {
+  height: 100%;
+  font-size: 13px;
+}
+.cm-editor .cm-scroller {
+  font-family: var(--font-mono);
+  line-height: 1.55;
+}
+.cm-editor.cm-focused {
+  outline: none;
+}
+.cm-the-tab {
+  background: var(--amber);
+  color: var(--primary-foreground);
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--amber), 0 0 24px 4px rgba(242, 181, 68, 0.55);
+  animation: tab-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tab-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--amber), 0 0 12px 2px rgba(242, 181, 68, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 3px var(--amber), 0 0 32px 8px rgba(242, 181, 68, 0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-the-tab {
+    animation: none;
+  }
+}
+
+/* Visible whitespace when the player gives up their dignity */
+.cm-editor .cm-highlightTab {
+  background-image: none;
+  position: relative;
+}
+.cm-editor .cm-highlightTab::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--squiggle);
+  opacity: 0.9;
+}
+.cm-editor .cm-highlightSpace::before {
+  color: var(--mute);
+  opacity: 0.35;
+}

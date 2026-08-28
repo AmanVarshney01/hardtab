@@ -1,9 +1,9 @@
 import { Toaster } from "@find-space/ui/components/sonner";
 import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { useEffect } from "react";
 
-import Header from "@/components/header";
-import { ThemeProvider } from "@/components/theme-provider";
+import { useThemeId } from "@/lib/theme-store";
+import { getTheme, isDarkTheme, uiVars } from "@/lib/themes";
 
 import "../index.css";
 
@@ -13,40 +13,39 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   head: () => ({
     meta: [
-      {
-        title: "find-space",
-      },
+      { title: "find-space — one tab in 100,000 lines of Java" },
       {
         name: "description",
-        content: "find-space is a web application",
+        content: "Somewhere in 100,000 lines of enterprise Java, someone used a tab. Find it.",
       },
     ],
-    links: [
-      {
-        rel: "icon",
-        href: "/favicon.ico",
-      },
-    ],
+    links: [{ rel: "icon", href: "/favicon.svg" }],
   }),
 });
 
 function RootComponent() {
+  const themeId = useThemeId();
+  useEffect(() => {
+    const theme = getTheme(themeId);
+    const style = document.documentElement.style;
+    for (const [k, v] of Object.entries(uiVars(theme))) style.setProperty(k, v);
+    document.documentElement.classList.toggle("dark", isDarkTheme(theme));
+    document.documentElement.style.colorScheme = isDarkTheme(theme) ? "dark" : "light";
+  }, [themeId]);
+
   return (
     <>
       <HeadContent />
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="dark"
-        disableTransitionOnChange
-        storageKey="vite-ui-theme"
-      >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
-          <Outlet />
-        </div>
-        <Toaster richColors />
-      </ThemeProvider>
-      <TanStackRouterDevtools position="bottom-left" />
+      <div className="min-h-svh">
+        <Outlet />
+      </div>
+      <Toaster
+        position="top-center"
+        theme="dark"
+        toastOptions={{
+          className: "font-mono! text-xs! rounded-none! border-border! bg-ink-2! text-foreground!",
+        }}
+      />
     </>
   );
 }

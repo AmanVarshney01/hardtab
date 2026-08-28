@@ -56,3 +56,6 @@ coverage
 .cache
 tmp
 temp
+
+# Playwright MCP output
+.playwright-mcp

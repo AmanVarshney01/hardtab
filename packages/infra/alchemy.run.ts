@@ -1,11 +1,6 @@
 import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
-import { config } from "dotenv";
-import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
-
-config({ path: "./.env" });
-config({ path: "../../apps/web/.env" });
 
 export default Alchemy.Stack(
   "find-space",
@@ -19,9 +14,6 @@ export default Alchemy.Stack(
       assets: {
         htmlHandling: "auto-trailing-slash",
         notFoundHandling: "single-page-application",
-      },
-      env: {
-        VITE_SERVER_URL: Config.string("VITE_SERVER_URL"),
       },
       dev: {
         port: 3001,
