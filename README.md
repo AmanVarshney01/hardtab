@@ -1,6 +1,6 @@
-# find-space
+# hardtab
 
-Somewhere in 100,000 lines of enterprise Java, someone used a tab. Find it.
+Somewhere in 100,000 lines of enterprise Java, someone used a hard tab. Find it. Live at https://hardtab.amanv.dev
 
 A joke game in the tradition of *find the needle in the haystack* and *find the missing semicolon*. The tab
 always sits on a tab stop, so it renders pixel-identical to the four spaces around it. The only tells are

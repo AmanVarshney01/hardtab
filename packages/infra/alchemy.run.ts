@@ -11,10 +11,12 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const webWorker = yield* Cloudflare.Website.Vite("web", {
       rootDir: "../../apps/web",
-      domain: "find-space.amanv.dev",
+      main: "worker/index.ts",
+      domain: { name: "hardtab.amanv.dev", aliases: ["find-space.amanv.dev"] },
       assets: {
         htmlHandling: "auto-trailing-slash",
         notFoundHandling: "single-page-application",
+        runWorkerFirst: true,
       },
       dev: {
         port: 3001,

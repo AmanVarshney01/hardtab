@@ -13,7 +13,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
   head: () => ({
     meta: [
-      { title: "find-space — one tab in 100,000 lines of Java" },
+      { title: "hardtab — one tab in 100,000 lines of Java" },
       {
         name: "description",
         content: "Somewhere in 100,000 lines of enterprise Java, someone used a tab. Find it.",

@@ -1,10 +1,12 @@
 import { Button } from "@find-space/ui/components/button";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { ThemeSelect } from "@/components/theme-select";
-
+import { useWhitespaceWall } from "@/components/whitespace-wall";
 import { LEVELS, formatDuration, loadBest, randomSeed } from "@/lib/game";
+import { useThemeId } from "@/lib/theme-store";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -13,75 +15,128 @@ export const Route = createFileRoute("/")({
 function HomeComponent() {
   const [lines, setLines] = useState<number>(100_000);
   const [seed] = useState(randomSeed);
+  const [hover, setHover] = useState(false);
+  const [practiceFound, setPracticeFound] = useState(false);
+  const themeId = useThemeId();
   const best = loadBest();
 
+  const wall = useWhitespaceWall({
+    themeId,
+    onHover: setHover,
+    onFound: () => {
+      if (practiceFound) return;
+      setPracticeFound(true);
+      toast.success("Practice tab found.", { description: "That one didn't count. The real ones don't glow." });
+    },
+  });
+
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-5xl flex-col justify-center px-6 py-12 sm:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-amber">
-          Build failed · checkstyle · MixedIndentation
-        </p>
-        <ThemeSelect />
-      </div>
+    <main
+      {...wall.bind}
+      className={`relative grid min-h-svh grid-rows-[auto_1fr_auto] overflow-hidden bg-ink ${hover ? "cursor-pointer" : "cursor-default"}`}
+    >
+      {/* The whitespace wall */}
+      <canvas
+        ref={wall.canvasRef}
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 h-full w-full ${wall.supported === false ? "hidden" : ""}`}
+      />
+      {wall.supported === false && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage: "radial-gradient(circle, color-mix(in srgb, var(--paper) 30%, transparent) 1px, transparent 1.2px)",
+            backgroundSize: "9px 21px",
+            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 80%)",
+          }}
+        />
+      )}
 
-      <h1 className="display mt-6 max-w-4xl text-[clamp(2.6rem,8vw,6.5rem)]">
-        Somewhere in <span className="tabular-nums">100,000</span> lines of Java, someone used a{" "}
-        <span className="squiggle">tab</span>.
-      </h1>
-      <p className="display mt-4 text-[clamp(1.6rem,4vw,3rem)] text-muted-foreground">Find it.</p>
-
-      <pre className="mt-10 overflow-x-auto border-l-2 border-squiggle bg-ink-2 px-4 py-3 font-mono text-xs leading-relaxed text-muted-foreground">
-        {`[ERROR] src/main/java/com/**/*.java: Tab character found where spaces expected (1 occurrence)
-[ERROR] Assignee:  you
-[ERROR] Priority:  P0 — blocks release
-[ERROR] Hint:      Spaces select one column at a time. A tab jumps four.`}
-      </pre>
-
-      <fieldset className="mt-10">
-        <legend className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Codebase size</legend>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {LEVELS.map((level) => {
-            const selected = level.lines === lines;
-            const b = best[String(level.lines)];
-            return (
-              <button
-                key={level.lines}
-                type="button"
-                onClick={() => setLines(level.lines)}
-                aria-pressed={selected}
-                className={[
-                  "flex flex-col items-start border p-3 text-left transition-colors outline-none focus-visible:ring-1 focus-visible:ring-amber",
-                  selected
-                    ? "border-amber bg-ink-2 text-foreground"
-                    : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground",
-                ].join(" ")}
-              >
-                <span className="font-mono text-lg tabular-nums">{level.lines.toLocaleString()}</span>
-                <span className="mt-1 text-sm">{level.label}</span>
-                <span className="text-xs text-muted-foreground">{level.blurb}</span>
-                <span className="mt-2 font-mono text-[11px] text-muted-foreground">
-                  {b === undefined ? "best —" : `best ${formatDuration(b)}`}
-                </span>
-              </button>
-            );
-          })}
+      {/* Top bar */}
+      <header className="pointer-events-none relative z-10 flex items-center justify-between px-5 py-4 sm:px-8">
+        <span className="flex items-baseline gap-2">
+          <span className="font-mono text-sm text-amber" aria-hidden>\t</span>
+          <span className="display text-2xl leading-none">hardtab</span>
+        </span>
+        <div className="pointer-events-auto">
+          <ThemeSelect />
         </div>
-      </fieldset>
+      </header>
 
-      <div className="mt-8 flex flex-wrap items-center gap-4">
-        <Button size="lg" nativeButton={false} render={<Link to="/play" search={{ lines, seed }} />}>
-          Open the codebase →
-        </Button>
-        <p className="font-mono text-xs text-muted-foreground">
-          Drag-select whitespace. Watch the selection. Press ⏎ to claim. Wrong claims cost 10s.
+      {/* Hero */}
+      <section className="pointer-events-none relative z-10 flex flex-col justify-center px-5 py-10 sm:px-8">
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-amber sm:text-xs">
+          <span className="mr-2 inline-block h-2 w-2 bg-squiggle align-middle" aria-hidden />
+          checkstyle · MixedIndentation · 1 occurrence · P0
         </p>
-      </div>
 
-      <p className="mt-16 max-w-prose text-sm text-muted-foreground">
-        Every haystack is generated in your browser from a seed, so the link you're sent has the same tab in the
-        same place. Ctrl+F only searches what's on screen. Nobody is stopping you from opening devtools, but we
-        both know what that says about you.
-      </p>
+        <h1 className="display mt-5 text-[clamp(3.25rem,min(11.5vw,15svh),11rem)] leading-[0.84]">
+          One tab.
+          <br />
+          100,000 lines
+          <br />
+          of Java.
+          <br />
+          <span className="text-amber">Find it.</span>
+        </h1>
+
+        <p className="mt-6 max-w-md font-mono text-xs leading-relaxed text-muted-foreground sm:text-sm">
+          Spaces select one column at a time. A tab jumps four. Press ⏎ to claim. Wrong claims cost ten seconds.
+        </p>
+
+        <div className="pointer-events-auto mt-8 flex flex-wrap items-end gap-x-8 gap-y-5">
+          <fieldset>
+            <legend className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Codebase</legend>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {LEVELS.map((level) => {
+                const selected = level.lines === lines;
+                const b = best[String(level.lines)];
+                return (
+                  <button
+                    key={level.lines}
+                    type="button"
+                    onClick={() => setLines(level.lines)}
+                    aria-pressed={selected}
+                    title={`${level.label} — ${level.blurb}`}
+                    className={[
+                      "flex flex-col items-start border px-3 py-2 text-left outline-none transition-colors focus-visible:ring-1 focus-visible:ring-amber",
+                      selected
+                        ? "border-amber bg-ink-2 text-foreground"
+                        : "border-border bg-ink/70 text-muted-foreground backdrop-blur-sm hover:border-muted-foreground hover:text-foreground",
+                    ].join(" ")}
+                  >
+                    <span className="font-mono text-base tabular-nums leading-none">{level.lines.toLocaleString()}</span>
+                    <span className="mt-1 font-mono text-[10px] text-muted-foreground">
+                      {b === undefined ? level.label.toLowerCase() : `best ${formatDuration(b)}`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <Button size="lg" nativeButton={false} render={<Link to="/play" search={{ lines, seed }} />}>
+            Open the codebase →
+          </Button>
+        </div>
+      </section>
+
+      {/* Status bar */}
+      <footer className="pointer-events-none relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-ink-2/90 px-3 py-1 font-mono text-[11px] text-muted-foreground backdrop-blur">
+        <div className="flex items-center gap-4">
+          <span>whitespace: rendered</span>
+          <span className={practiceFound ? "text-amber" : hover ? "text-foreground" : ""}>
+            {practiceFound ? "practice tab: found (didn't count)" : hover ? "practice tab: under cursor" : "practice tab: somewhere on this page"}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span>Spaces: 4</span>
+          <span>UTF-8</span>
+          <span>Java</span>
+          <span className="text-squiggle">⚠ 1 problem</span>
+        </div>
+      </footer>
     </main>
   );
 }

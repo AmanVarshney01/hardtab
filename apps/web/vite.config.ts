@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
+import { wgslVitePlugin } from "@vgpu/wgsl/loader-vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -11,6 +12,7 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   plugins: [
+    wgslVitePlugin(),
     tailwindcss(),
     tanstackRouter({
       target: "react",

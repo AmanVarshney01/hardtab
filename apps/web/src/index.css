@@ -1,8 +1,8 @@
 @import "@find-space/ui/globals.css";
 
 @theme inline {
-  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-amber: var(--amber);
   --color-squiggle: var(--squiggle);
   --color-ink: var(--ink);
@@ -51,11 +51,11 @@ body {
 }
 
 .display {
-  font-family: var(--font-sans);
-  font-variation-settings: "wdth" 100, "opsz" 96;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
+  font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
   font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  font-feature-settings: "ss01", "cv11";
 }
 
 .squiggle {

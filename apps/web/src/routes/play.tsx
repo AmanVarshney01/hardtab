@@ -21,6 +21,8 @@ import { useThemeId } from "@/lib/theme-store";
 const searchSchema = z.object({
   lines: z.coerce.number().int().min(50).max(1_000_000).catch(100_000),
   seed: z.coerce.number().int().nonnegative().catch(() => randomSeed()),
+  t: z.coerce.number().int().positive().optional().catch(undefined),
+  w: z.coerce.number().int().nonnegative().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/play")({
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/play")({
 type Phase = "playing" | "won" | "surrendered";
 
 function Play() {
-  const { lines, seed } = Route.useSearch();
+  const { lines, seed, t: sharedMs, w: sharedWrong } = Route.useSearch();
   const navigate = useNavigate();
   const themeId = useThemeId();
   const haystack = useMemo(() => generateHaystack(lines, seed), [lines, seed]);
@@ -105,9 +107,34 @@ function Play() {
   const playAgain = () => navigate({ to: "/play", search: { lines, seed: randomSeed() } });
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
+    await navigator.clipboard.writeText(`${window.location.origin}/play?lines=${lines}&seed=${seed}`);
     toast("Link copied. Same haystack, same tab.");
   };
+
+  const shareUrl = () =>
+    `${window.location.origin}/play?lines=${lines}&seed=${seed}&t=${finalMs ?? 0}&w=${wrong}`;
+  const shareText = () =>
+    `I found the tab in ${lines.toLocaleString()} lines of Java in ${formatDuration(finalMs ?? 0)}` +
+    (wrong > 0 ? ` with ${wrong} wrong claim${wrong === 1 ? "" : "s"}` : "") +
+    ". Same haystack, your turn:";
+
+  const share = async () => {
+    const url = shareUrl();
+    const text = shareText();
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: "hardtab", text, url });
+        return;
+      } catch {
+        // fall through to clipboard
+      }
+    }
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    toast("Result copied. Paste it somewhere people will judge you.");
+  };
+
+  const postUrl = () =>
+    `https://x.com/intent/post?text=${encodeURIComponent(`${shareText()} ${shareUrl()}`)}`;
 
   const level = LEVELS.find((l) => l.lines === lines);
   const revealAt = phase === "playing" ? null : haystack.tabOffset;
@@ -118,12 +145,19 @@ function Play() {
       {/* Top bar */}
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border px-3 py-2 sm:px-4">
         <div className="flex min-w-0 items-center gap-4">
-          <Link to="/" className="display text-lg text-foreground hover:text-amber">
-            find-space
+          <Link to="/" className="flex items-baseline gap-1.5 text-foreground hover:text-amber">
+            <span className="font-mono text-xs text-amber" aria-hidden>\t</span>
+            <span className="display text-lg">hardtab</span>
           </Link>
           <span className="hidden truncate font-mono text-xs text-muted-foreground sm:inline">
             {level ? `${level.label} · ` : ""}
             {lines.toLocaleString()} lines · seed {seed}
+            {sharedMs !== undefined && (
+              <span className="ml-3 text-amber">
+                beat {formatDuration(sharedMs)}
+                {sharedWrong ? ` (+${sharedWrong} wrong)` : ""}
+              </span>
+            )}
           </span>
         </div>
         <div
@@ -190,15 +224,27 @@ function Play() {
                     ? "It had been there since 2014."
                     : cheated
                       ? "You looked at the whitespace. Doesn't count."
-                      : isBest
-                        ? "New personal best."
-                        : "Nobody will thank you."}
+                      : sharedMs !== undefined && (finalMs ?? 0) < sharedMs
+                        ? `Beat the shared ${formatDuration(sharedMs)}. Send it back.`
+                        : sharedMs !== undefined
+                          ? `Slower than the shared ${formatDuration(sharedMs)}. Rough.`
+                          : isBest
+                            ? "New personal best."
+                            : "Nobody will thank you."}
                 </dd>
               </dl>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Button onClick={playAgain}>New haystack</Button>
-                <Button variant="outline" onClick={copyLink}>
-                  Copy link to this one
+                {phase === "won" && !cheated && <Button onClick={share}>Share result</Button>}
+                {phase === "won" && !cheated && (
+                  <Button variant="outline" nativeButton={false} render={<a href={postUrl()} target="_blank" rel="noreferrer" />}>
+                    Post on X
+                  </Button>
+                )}
+                <Button variant={phase === "won" && !cheated ? "ghost" : "default"} onClick={playAgain}>
+                  New haystack
+                </Button>
+                <Button variant="ghost" onClick={copyLink}>
+                  Copy link
                 </Button>
                 <Button variant="ghost" nativeButton={false} render={<Link to="/" />}>
                   Home
