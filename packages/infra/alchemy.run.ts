@@ -11,6 +11,7 @@ export default Alchemy.Stack(
   Effect.gen(function* () {
     const webWorker = yield* Cloudflare.Website.Vite("web", {
       rootDir: "../../apps/web",
+      domain: "find-space.amanv.dev",
       assets: {
         htmlHandling: "auto-trailing-slash",
         notFoundHandling: "single-page-application",
