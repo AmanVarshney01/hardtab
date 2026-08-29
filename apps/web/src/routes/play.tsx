@@ -217,17 +217,17 @@ function Play() {
       {/* HUD */}
       <header
         key={shakeKey}
-        className={`flex flex-wrap items-stretch justify-between gap-x-3 gap-y-2 border-b border-border px-3 py-2 sm:px-4 ${shakeKey > 0 ? "hud-shake" : ""}`}
+        className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-border px-2 py-1.5 sm:items-stretch sm:px-4 sm:py-2 ${shakeKey > 0 ? "hud-shake" : ""}`}
       >
-        {/* Objective */}
-        <div className="flex min-w-0 items-center gap-3">
+        {/* Brand + objective */}
+        <div className="order-1 flex min-w-0 items-center gap-3">
           <Link to="/" className="flex items-baseline gap-1.5 text-foreground hover:text-amber">
             <span className="font-mono text-xs text-amber" aria-hidden>
               \t
             </span>
             <span className="display text-lg">hardtab</span>
           </Link>
-          <div className="hud-readout hidden min-w-0 flex-col justify-center px-3 py-1 sm:flex">
+          <div className="hud-readout hidden min-w-0 flex-col justify-center px-3 py-1 md:flex">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Objective</span>
             <span className="truncate font-mono text-xs text-foreground">
               <span className="hud-blink mr-1.5 inline-block h-1.5 w-1.5 bg-squiggle align-middle" aria-hidden />
@@ -242,12 +242,22 @@ function Play() {
           </div>
         </div>
 
+        {/* Primary action: always top-right on phones */}
+        <div className="order-2 sm:order-4">
+          <Button size="default" onClick={claim} disabled={phase !== "playing"} className="font-bold uppercase tracking-wider">
+            Claim{" "}
+            <kbd className="ml-1 hidden rounded-none border border-primary-foreground/30 px-1 text-[10px] font-normal sm:inline">
+              ⏎
+            </kbd>
+          </Button>
+        </div>
+
         {/* Readouts */}
-        <div className="flex items-stretch gap-2">
-          <div className="hud-readout relative flex flex-col justify-center px-3 py-1">
+        <div className="order-3 flex w-full items-stretch gap-1.5 sm:order-2 sm:w-auto sm:gap-2">
+          <div className="hud-readout relative flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Time</span>
             <span
-              className={`font-mono text-2xl leading-none tabular-nums ${phase === "won" ? "text-amber" : "text-foreground"}`}
+              className={`font-mono text-xl leading-none tabular-nums sm:text-2xl ${phase === "won" ? "text-amber" : "text-foreground"}`}
               aria-live="off"
             >
               {formatDurationTenths(elapsed)}
@@ -262,9 +272,12 @@ function Play() {
               </span>
             ))}
           </div>
-          <div className="hud-readout flex flex-col justify-center px-3 py-1" title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}>
+          <div
+            className="hud-readout flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3"
+            title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}
+          >
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Strikes</span>
-            <span className="flex gap-1 font-mono text-lg leading-none" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
+            <span className="flex gap-1 font-mono text-base leading-none sm:text-lg" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
               {Array.from({ length: strikeSlots }, (_, i) => (
                 <span key={i} className={i < wrong ? "text-squiggle" : "text-border"}>
                   ✗
@@ -272,36 +285,35 @@ function Play() {
               ))}
             </span>
           </div>
-          <div className="hud-readout flex flex-col justify-center px-3 py-1">
+          <div className="hud-readout flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3">
             <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Scanned</span>
-            <span className="font-mono text-lg leading-none tabular-nums text-foreground">
+            <span className="font-mono text-base leading-none tabular-nums text-foreground sm:text-lg">
               {scannedPct}
               <span className="text-xs text-muted-foreground">%</span>
             </span>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex w-full flex-wrap items-center justify-end gap-x-1.5 gap-y-1 sm:w-auto">
-          <ThemeSelect className="mr-1" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSfxEnabled(!sfxOn)}
-            aria-pressed={sfxOn}
-            title={sfxOn ? "Sound on" : "Sound off"}
-          >
-            {sfxOn ? "SFX on" : "SFX off"}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
-            Show whitespace
-          </Button>
-          <Button variant="ghost" size="sm" onClick={surrender} disabled={phase !== "playing"}>
-            Give up
-          </Button>
-          <Button size="default" onClick={claim} disabled={phase !== "playing"} className="font-bold uppercase tracking-wider">
-            Claim <kbd className="ml-1 rounded-none border border-primary-foreground/30 px-1 text-[10px] font-normal">⏎</kbd>
-          </Button>
+        {/* Secondary actions */}
+        <div className="order-4 flex w-full flex-nowrap items-center justify-between gap-x-1 sm:order-3 sm:w-auto sm:justify-end">
+          <ThemeSelect />
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => setSfxEnabled(!sfxOn)}
+              aria-pressed={sfxOn}
+              title={sfxOn ? "Sound on" : "Sound off"}
+            >
+              {sfxOn ? "SFX on" : "SFX off"}
+            </Button>
+            <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
+              Whitespace
+            </Button>
+            <Button variant="ghost" size="xs" onClick={surrender} disabled={phase !== "playing"}>
+              Give up
+            </Button>
+          </div>
         </div>
       </header>
 

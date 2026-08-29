@@ -33,7 +33,7 @@ function HomeComponent() {
   return (
     <main
       {...wall.bind}
-      className={`relative grid min-h-svh grid-rows-[auto_1fr_auto] overflow-hidden bg-ink ${hover ? "cursor-pointer" : "cursor-default"}`}
+      className={`relative grid min-h-svh grid-rows-[auto_1fr_auto] overflow-x-hidden bg-ink ${hover ? "cursor-pointer" : "cursor-default"}`}
     >
       {/* The whitespace wall */}
       <canvas
@@ -82,13 +82,14 @@ function HomeComponent() {
         </h1>
 
         <p className="mt-6 max-w-md font-mono text-xs leading-relaxed text-muted-foreground sm:text-sm">
-          Spaces select one column at a time. A tab jumps four. Press ⏎ to claim. Wrong claims cost ten seconds.
+          Spaces select one column at a time. A tab jumps four. Hit <span className="text-foreground">Claim</span> (or ⏎)
+          when you have it. Wrong claims cost ten seconds.
         </p>
 
         <div className="pointer-events-auto mt-8 flex flex-wrap items-end gap-x-8 gap-y-5">
           <fieldset>
             <legend className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Codebase</legend>
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2 grid grid-cols-2 gap-1 sm:flex sm:flex-wrap">
               {LEVELS.map((level) => {
                 const selected = level.lines === lines;
                 const b = best[String(level.lines)];
@@ -116,7 +117,12 @@ function HomeComponent() {
             </div>
           </fieldset>
 
-          <Button size="lg" nativeButton={false} render={<Link to="/play" search={{ lines, seed }} />}>
+          <Button
+            size="lg"
+            nativeButton={false}
+            className="w-full sm:w-auto"
+            render={<Link to="/play" search={{ lines, seed }} />}
+          >
             Open the codebase →
           </Button>
         </div>
@@ -124,16 +130,16 @@ function HomeComponent() {
 
       {/* Status bar */}
       <footer className="pointer-events-none relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-ink-2/90 px-3 py-1 font-mono text-[11px] text-muted-foreground backdrop-blur">
-        <div className="flex items-center gap-4">
-          <span>whitespace: rendered</span>
-          <span className={practiceFound ? "text-amber" : hover ? "text-foreground" : ""}>
+        <div className="flex min-w-0 items-center gap-4">
+          <span className="hidden sm:inline">whitespace: rendered</span>
+          <span className={`truncate ${practiceFound ? "text-amber" : hover ? "text-foreground" : ""}`}>
             {practiceFound ? "practice tab: found (didn't count)" : hover ? "practice tab: under cursor" : "practice tab: somewhere on this page"}
           </span>
         </div>
         <div className="flex items-center gap-4">
           <span>Spaces: 4</span>
-          <span>UTF-8</span>
-          <span>Java</span>
+          <span className="hidden sm:inline">UTF-8</span>
+          <span className="hidden sm:inline">Java</span>
           <span className="text-squiggle">⚠ 1 problem</span>
         </div>
       </footer>

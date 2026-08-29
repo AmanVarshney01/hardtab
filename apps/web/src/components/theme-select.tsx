@@ -10,7 +10,7 @@ export function ThemeSelect({ className = "" }: { className?: string }) {
         value={id}
         onChange={(e) => setThemeId(e.target.value)}
         aria-label="Editor theme"
-        className="h-7 max-w-[11rem] cursor-pointer border border-border bg-ink-2 px-2 text-xs text-foreground outline-none focus-visible:ring-1 focus-visible:ring-amber"
+        className="h-7 max-w-[7rem] cursor-pointer sm:max-w-[11rem] border border-border bg-ink-2 px-2 text-xs text-foreground outline-none focus-visible:ring-1 focus-visible:ring-amber"
       >
         {THEMES.map((t) => (
           <option key={t.id} value={t.id}>
