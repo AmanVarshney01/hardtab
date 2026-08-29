@@ -51,7 +51,7 @@ export function Radar({ scanned, viewport, target, onJump }: RadarProps) {
       onPointerMove={(e) => {
         if (e.buttons & 1) jump(e);
       }}
-      className="relative h-full w-7 cursor-crosshair select-none border-l border-border bg-ink-2 outline-none focus-visible:ring-1 focus-visible:ring-amber"
+      className="radar relative h-full w-8 cursor-crosshair select-none outline-none focus-visible:ring-1 focus-visible:ring-amber"
     >
       {/* Ticks every 10% */}
       {Array.from({ length: 9 }, (_, i) => (
@@ -62,17 +62,18 @@ export function Radar({ scanned, viewport, target, onJump }: RadarProps) {
           style={{ top: `${(i + 1) * 10}%` }}
         />
       ))}
+      <div aria-hidden className="radar-sweep absolute inset-x-0 h-6" />
       {runs.map(([a, b]) => (
         <div
           key={a}
           aria-hidden
-          className="absolute inset-x-1.5 bg-paper/25"
+          className="radar-scan absolute inset-x-2"
           style={{ top: `${(a / n) * 100}%`, height: `${Math.max(0.35, ((b - a) / n) * 100)}%` }}
         />
       ))}
       <div
         aria-hidden
-        className="absolute inset-x-0.5 border border-amber bg-amber/25 shadow-[0_0_10px_var(--amber)]"
+        className="radar-view absolute inset-x-1"
         style={{
           top: `${viewport[0] * 100}%`,
           height: `${Math.max(0.6, (viewport[1] - viewport[0]) * 100)}%`,
@@ -81,7 +82,7 @@ export function Radar({ scanned, viewport, target, onJump }: RadarProps) {
       {target !== null && (
         <div
           aria-hidden
-          className="absolute -left-1 h-0.5 w-9 bg-squiggle shadow-[0_0_12px_var(--squiggle)]"
+          className="absolute -left-1 h-0.5 w-10 bg-squiggle shadow-[0_0_12px_var(--squiggle)]"
           style={{ top: `calc(${target * 100}% - 1px)` }}
         />
       )}

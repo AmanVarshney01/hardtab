@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { CodeHunt, type CodeHuntApi, type SelectionInfo, type ViewportInfo } from "@/components/code-hunt";
+import { useHudFx } from "@/components/hud-fx";
 import { Radar } from "@/components/radar";
 import { ThemeSelect } from "@/components/theme-select";
 import {
@@ -44,6 +45,7 @@ function Play() {
   const navigate = useNavigate();
   const themeId = useThemeId();
   const sfxOn = useSfxEnabled();
+  const fx = useHudFx(themeId);
   const haystack = useMemo(() => generateHaystack(lines, seed), [lines, seed]);
 
   const [phase, setPhase] = useState<Phase>("playing");
@@ -67,7 +69,6 @@ function Play() {
 
   // Feedback pulses (incrementing keys re-trigger CSS animations).
   const [shakeKey, setShakeKey] = useState(0);
-  const [flash, setFlash] = useState<{ key: number; kind: "wrong" | "win" } | null>(null);
   const [floaters, setFloaters] = useState<Array<{ key: number; text: string }>>([]);
 
   // Reset everything on a new haystack.
@@ -82,7 +83,6 @@ function Play() {
     setIsBest(false);
     scannedRef.current = new Uint8Array(RADAR_BUCKETS);
     setScannedCount(0);
-    setFlash(null);
     setFloaters([]);
   }, [haystack]);
 
@@ -113,12 +113,26 @@ function Play() {
     [haystack.lineCount],
   );
 
+  const onSelection = useCallback(
+    (info: SelectionInfo) => {
+      setSel(info);
+      fx.fxRef.current?.setCaret(apiRef.current?.coordsAt(info.to) ?? null);
+    },
+    [fx.fxRef],
+  );
+
   const scannedPct = Math.round((scannedCount / RADAR_BUCKETS) * 100);
   const elapsed = phase === "playing" ? now - startedAt + penalty : (finalMs ?? 0);
 
   const pulse = (kind: "wrong" | "win", text?: string) => {
-    setFlash({ key: Date.now(), kind });
-    if (kind === "wrong") setShakeKey((k) => k + 1);
+    const caretAt = apiRef.current?.coordsAt(selRef.current.to) ?? null;
+    if (kind === "wrong") {
+      setShakeKey((k) => k + 1);
+      fx.fxRef.current?.strike(caretAt);
+    } else {
+      // The reveal scrolls the tab into view; bloom from wherever it lands.
+      window.setTimeout(() => fx.fxRef.current?.win(apiRef.current?.coordsAt(haystack.tabOffset) ?? null), 80);
+    }
     if (text) {
       const key = Date.now();
       setFloaters((f) => [...f, { key, text }]);
@@ -202,22 +216,19 @@ function Play() {
   const selLen = sel.to - sel.from;
   const rank = phase === "playing" ? null : rankRun({ won: phase === "won", cheated, wrong, scannedPct });
   const strikeSlots = Math.max(3, wrong);
+  const segments = 16;
+  const litSegments = Math.round((scannedPct / 100) * segments);
+  const ready = phase === "playing" && selLen > 0 && selLen <= 16;
 
   return (
     <div className="grid h-svh min-w-0 grid-cols-[minmax(0,1fr)] grid-rows-[auto_1fr_auto] overflow-hidden bg-ink">
-      {/* Full-screen flash on strike / win */}
-      {flash && (
-        <div
-          key={flash.key}
-          aria-hidden
-          className={`hud-flash pointer-events-none fixed inset-0 z-50 ${flash.kind === "wrong" ? "bg-squiggle" : "bg-amber"}`}
-        />
-      )}
+      {/* WebGPU screen overlay: scanlines, sweep, strike shockwave, win bloom */}
+      <canvas ref={fx.canvasRef} aria-hidden className="pointer-events-none fixed inset-0 z-40 h-full w-full" />
 
       {/* HUD */}
       <header
         key={shakeKey}
-        className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-border px-2 py-1.5 sm:items-stretch sm:px-4 sm:py-2 ${shakeKey > 0 ? "hud-shake" : ""}`}
+        className={`relative z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2 pt-2 pb-2 sm:items-stretch sm:px-4 ${shakeKey > 0 ? "hud-shake" : ""}`}
       >
         {/* Brand + objective */}
         <div className="order-1 flex min-w-0 items-center gap-3">
@@ -227,85 +238,76 @@ function Play() {
             </span>
             <span className="display text-lg">hardtab</span>
           </Link>
-          <div className="hud-readout hidden min-w-0 flex-col justify-center px-3 py-1 md:flex">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Objective</span>
-            <span className="truncate font-mono text-xs text-foreground">
-              <span className="hud-blink mr-1.5 inline-block h-1.5 w-1.5 bg-squiggle align-middle" aria-hidden />
+          <Panel className="hidden md:block">
+            <span className="hud-label">Objective</span>
+            <span className="flex items-center gap-2 truncate font-mono text-xs text-foreground">
+              <span className="led is-lit hud-blink" style={{ width: 8, height: 8 }} aria-hidden />
               1 hard tab · {lines.toLocaleString()} lines{level ? ` · ${level.label}` : ""}
               {sharedMs !== undefined && (
-                <span className="ml-2 text-amber">
+                <span className="text-amber">
                   · beat {formatDuration(sharedMs)}
                   {sharedWrong ? ` (+${sharedWrong})` : ""}
                 </span>
               )}
             </span>
-          </div>
+          </Panel>
         </div>
 
-        {/* Primary action: always top-right on phones */}
+        {/* Primary action */}
         <div className="order-2 sm:order-4">
-          <Button size="default" onClick={claim} disabled={phase !== "playing"} className="font-bold uppercase tracking-wider">
-            Claim{" "}
-            <kbd className="ml-1 hidden rounded-none border border-primary-foreground/30 px-1 text-[10px] font-normal sm:inline">
-              ⏎
-            </kbd>
-          </Button>
+          <button
+            type="button"
+            onClick={claim}
+            disabled={phase !== "playing"}
+            className={`claim ${ready ? "is-ready" : ""}`}
+            aria-keyshortcuts="Enter"
+          >
+            <span className="claim-body flex h-11 items-center gap-2 px-5 text-sm">
+              Claim
+              <kbd className="hidden rounded-none border border-black/25 px-1 text-[10px] font-normal tracking-normal sm:inline">⏎</kbd>
+            </span>
+          </button>
         </div>
 
         {/* Readouts */}
-        <div className="order-3 flex w-full items-stretch gap-1.5 sm:order-2 sm:w-auto sm:gap-2">
-          <div className="hud-readout relative flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Time</span>
-            <span
-              className={`font-mono text-xl leading-none tabular-nums sm:text-2xl ${phase === "won" ? "text-amber" : "text-foreground"}`}
-              aria-live="off"
-            >
+        <div className="order-3 flex w-full items-stretch gap-2 sm:order-2 sm:w-auto">
+          <Panel className={`flex-1 sm:flex-none ${phase === "won" ? "is-win" : ""}`}>
+            <span className="hud-label">Time</span>
+            <span className={`hud-digits relative block text-xl leading-none sm:text-2xl ${phase === "won" ? "text-amber" : "text-foreground"}`} aria-live="off">
               {formatDurationTenths(elapsed)}
-            </span>
-            {floaters.map((f) => (
-              <span
-                key={f.key}
-                aria-hidden
-                className="hud-float pointer-events-none absolute -top-1 right-2 font-mono text-sm font-bold text-squiggle"
-              >
-                {f.text}
-              </span>
-            ))}
-          </div>
-          <div
-            className="hud-readout flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3"
-            title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}
-          >
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Strikes</span>
-            <span className="flex gap-1 font-mono text-base leading-none sm:text-lg" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
-              {Array.from({ length: strikeSlots }, (_, i) => (
-                <span key={i} className={i < wrong ? "text-squiggle" : "text-border"}>
-                  ✗
+              {floaters.map((f) => (
+                <span key={f.key} aria-hidden className="hud-float pointer-events-none absolute -top-3 right-0 text-sm text-squiggle">
+                  {f.text}
                 </span>
               ))}
             </span>
-          </div>
-          <div className="hud-readout flex flex-1 flex-col justify-center px-2 py-1 sm:flex-none sm:px-3">
-            <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Scanned</span>
-            <span className="font-mono text-base leading-none tabular-nums text-foreground sm:text-lg">
-              {scannedPct}
-              <span className="text-xs text-muted-foreground">%</span>
+          </Panel>
+          <Panel className={`flex-1 sm:flex-none ${wrong > 0 && phase === "playing" ? "is-hot" : ""}`} title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}>
+            <span className="hud-label">Strikes</span>
+            <span className="flex h-6 items-center gap-1.5" role="img" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
+              {Array.from({ length: strikeSlots }, (_, i) => (
+                <span key={i} className={`led ${i < wrong ? "is-lit" : ""}`} />
+              ))}
             </span>
-          </div>
+          </Panel>
+          <Panel className="flex-1 sm:w-40 sm:flex-none">
+            <span className="hud-label">
+              Scanned <span className="ml-1 text-foreground">{scannedPct}%</span>
+            </span>
+            <span className="meter mt-1" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={scannedPct}>
+              {Array.from({ length: segments }, (_, i) => (
+                <span key={i} className={`meter-seg ${i < litSegments ? "is-on" : ""}`} />
+              ))}
+            </span>
+          </Panel>
         </div>
 
         {/* Secondary actions */}
         <div className="order-4 flex w-full flex-nowrap items-center justify-between gap-x-1 sm:order-3 sm:w-auto sm:justify-end">
           <ThemeSelect />
           <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={() => setSfxEnabled(!sfxOn)}
-              aria-pressed={sfxOn}
-              title={sfxOn ? "Sound on" : "Sound off"}
-            >
-              {sfxOn ? "SFX on" : "SFX off"}
+            <Button variant="ghost" size="xs" onClick={() => setSfxEnabled(!sfxOn)} aria-pressed={sfxOn} title={sfxOn ? "Sound on" : "Sound off"}>
+              {sfxOn ? "Sound on" : "Sound off"}
             </Button>
             <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
               Whitespace
@@ -324,7 +326,7 @@ function Play() {
           revealAt={revealAt}
           showWhitespace={showWhitespace}
           themeId={themeId}
-          onSelection={setSel}
+          onSelection={onSelection}
           onViewport={onViewport}
           onClaim={claim}
           apiRef={apiRef}
@@ -339,19 +341,21 @@ function Play() {
         {phase !== "playing" && rank && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center p-4 sm:justify-end sm:p-6">
             <section
-              className="pointer-events-auto relative w-full max-w-md border border-amber bg-ink-2/95 p-5 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.7)] backdrop-blur"
+              className="hud-panel pointer-events-auto relative w-full max-w-md"
               role="dialog"
               aria-label={phase === "won" ? "You found the tab" : "You gave up"}
             >
               <div
                 aria-hidden
-                className={`hud-stamp display absolute -top-5 right-4 border-4 px-3 text-6xl leading-none ${
+                className={`hud-stamp display absolute -top-5 right-4 z-10 border-4 px-3 text-6xl leading-none ${
                   rank === "F" ? "border-squiggle text-squiggle" : "border-amber text-amber"
                 }`}
                 style={{ transform: "rotate(-8deg)" }}
               >
                 {rank}
               </div>
+              <div className="hud-panel-body">
+              <div className="hud-panel-inner p-5">
               <p className="font-mono text-[11px] uppercase tracking-widest text-amber">
                 {phase === "won" ? "Build passed · checkstyle" : "Build abandoned"}
               </p>
@@ -391,7 +395,11 @@ function Play() {
                 </dd>
               </dl>
               <div className="mt-5 flex flex-wrap gap-2">
-                {phase === "won" && !cheated && <Button onClick={share}>Share result</Button>}
+                {phase === "won" && !cheated && (
+                  <Button className="chamfer-sm" onClick={share}>
+                    Share result
+                  </Button>
+                )}
                 {phase === "won" && !cheated && (
                   <Button
                     variant="outline"
@@ -411,13 +419,15 @@ function Play() {
                   Home
                 </Button>
               </div>
+              </div>
+              </div>
             </section>
           </div>
         )}
       </div>
 
       {/* Status bar */}
-      <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-ink-2 px-3 py-1 font-mono text-[11px] text-muted-foreground">
+      <footer className="hud-bottom relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-1 font-mono text-[11px] text-muted-foreground">
         <div className="flex items-center gap-4">
           <span>
             Ln {sel.line.toLocaleString()}, Col {sel.col}
@@ -438,6 +448,16 @@ function Play() {
           </span>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function Panel({ className = "", title, children }: { className?: string; title?: string; children: React.ReactNode }) {
+  return (
+    <div className={`hud-panel ${className}`} title={title}>
+      <div className="hud-panel-body h-full">
+        <div className="hud-panel-inner flex h-full min-w-0 flex-col justify-center px-3 py-1.5">{children}</div>
+      </div>
     </div>
   );
 }

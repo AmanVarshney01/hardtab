@@ -31,6 +31,8 @@ export interface ViewportInfo {
 
 export interface CodeHuntApi {
   scrollToLine(line: number): void;
+  /** Client (CSS px) coordinates of a document position, if it is rendered. */
+  coordsAt(pos: number): { x: number; y: number } | null;
 }
 
 interface CodeHuntProps {
@@ -134,6 +136,10 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
     viewRef.current = view;
     if (apiRef) {
       apiRef.current = {
+        coordsAt(pos) {
+          const c = view.coordsAtPos(Math.min(Math.max(0, pos), view.state.doc.length));
+          return c ? { x: c.left, y: (c.top + c.bottom) / 2 } : null;
+        },
         scrollToLine(line) {
           const n = Math.min(Math.max(1, Math.round(line)), view.state.doc.lines);
           const pos = view.state.doc.line(n).from;

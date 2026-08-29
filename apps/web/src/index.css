@@ -155,3 +155,169 @@ body {
   .hud-shake, .hud-flash, .hud-float, .hud-stamp, .hud-blink { animation: none; }
   .hud-flash, .hud-float { opacity: 0; }
 }
+
+/* ---------- Game chrome ---------- */
+.chamfer {
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.chamfer-sm {
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+.hud-panel {
+  position: relative;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--amber) 18%, transparent)) drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45));
+}
+.hud-panel-body {
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--amber) 60%, var(--border)) 0%,
+    var(--border) 40%,
+    color-mix(in srgb, var(--paper) 14%, var(--border)) 100%
+  );
+}
+.hud-panel-inner {
+  clip-path: polygon(7.5px 0, 100% 0, 100% calc(100% - 7.5px), calc(100% - 7.5px) 100%, 0 100%, 0 7.5px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 35%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ink-3) 70%, var(--ink-2)), var(--ink-2) 55%, color-mix(in srgb, var(--ink) 45%, var(--ink-2)));
+}
+.hud-panel.is-hot {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--squiggle) 55%, transparent)) drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45));
+}
+.hud-panel.is-hot .hud-panel-body {
+  background: linear-gradient(160deg, var(--squiggle), color-mix(in srgb, var(--squiggle) 40%, var(--border)));
+}
+.hud-panel.is-win {
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--amber) 60%, transparent)) drop-shadow(0 3px 0 rgba(0, 0, 0, 0.45));
+}
+.hud-panel.is-win .hud-panel-body {
+  background: linear-gradient(160deg, var(--amber), color-mix(in srgb, var(--amber) 40%, var(--border)));
+}
+.hud-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.hud-digits {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 14px color-mix(in srgb, currentColor 55%, transparent);
+}
+
+/* Strike lamps */
+.led {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--paper) 18%, var(--ink-3)), var(--ink) 70%);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.7),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+.led.is-lit {
+  background: radial-gradient(circle at 35% 35%, #fff 0%, var(--squiggle) 35%, color-mix(in srgb, var(--squiggle) 55%, black) 100%);
+  box-shadow:
+    0 0 8px var(--squiggle),
+    0 0 18px color-mix(in srgb, var(--squiggle) 60%, transparent);
+  animation: led-on 0.35s ease-out both;
+}
+@keyframes led-on {
+  0% { transform: scale(1.8); filter: brightness(2.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+/* Segmented meter */
+.meter {
+  display: flex;
+  gap: 2px;
+}
+.meter-seg {
+  flex: 1;
+  height: 10px;
+  background: color-mix(in srgb, var(--ink-3) 75%, var(--ink));
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.5);
+  clip-path: polygon(2px 0, 100% 0, calc(100% - 2px) 100%, 0 100%);
+}
+.meter-seg.is-on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--amber) 80%, white), var(--amber) 45%, color-mix(in srgb, var(--amber) 70%, black));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--amber) 70%, transparent);
+}
+
+/* The big button */
+.claim {
+  position: relative;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--amber) 35%, transparent)) drop-shadow(0 4px 0 color-mix(in srgb, var(--amber) 35%, black));
+  transition: transform 0.08s ease, filter 0.15s ease;
+}
+.claim:active:not(:disabled) {
+  transform: translateY(3px);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--amber) 35%, transparent)) drop-shadow(0 1px 0 color-mix(in srgb, var(--amber) 35%, black));
+}
+.claim:disabled {
+  filter: none;
+  opacity: 0.5;
+}
+.claim-body {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 40%),
+    linear-gradient(180deg, var(--amber), color-mix(in srgb, var(--amber) 78%, black));
+  color: var(--primary-foreground);
+  font-family: var(--font-mono);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.claim.is-ready {
+  animation: claim-pulse 1.1s ease-in-out infinite;
+}
+@keyframes claim-pulse {
+  0%, 100% { filter: drop-shadow(0 0 8px color-mix(in srgb, var(--amber) 35%, transparent)) drop-shadow(0 4px 0 color-mix(in srgb, var(--amber) 35%, black)); }
+  50% { filter: drop-shadow(0 0 22px color-mix(in srgb, var(--amber) 85%, transparent)) drop-shadow(0 4px 0 color-mix(in srgb, var(--amber) 35%, black)); }
+}
+
+/* Radar */
+.radar {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 9px, rgba(255, 255, 255, 0.025) 9px 10px),
+    linear-gradient(90deg, color-mix(in srgb, var(--ink) 60%, var(--ink-2)), var(--ink-2));
+  border-left: 1px solid var(--border);
+  box-shadow: inset 2px 0 6px rgba(0, 0, 0, 0.45);
+}
+.radar-scan {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--paper) 12%, transparent), color-mix(in srgb, var(--paper) 30%, transparent));
+  box-shadow: 0 0 6px color-mix(in srgb, var(--paper) 15%, transparent);
+}
+.radar-view {
+  border: 1px solid var(--amber);
+  background: color-mix(in srgb, var(--amber) 28%, transparent);
+  box-shadow:
+    0 0 10px var(--amber),
+    inset 0 0 6px color-mix(in srgb, var(--amber) 60%, transparent);
+}
+.radar-sweep {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--amber) 35%, transparent));
+  animation: radar-sweep 7s linear infinite;
+  pointer-events: none;
+}
+@keyframes radar-sweep {
+  0% { top: -24px; }
+  100% { top: 100%; }
+}
+
+/* Bottom bar */
+.hud-bottom {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ink-3) 60%, var(--ink-2)), var(--ink-2));
+  box-shadow: 0 -1px 0 var(--border), 0 -6px 16px rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .claim.is-ready, .radar-sweep, .led.is-lit { animation: none; }
+}
