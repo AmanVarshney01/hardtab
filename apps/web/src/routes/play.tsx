@@ -8,7 +8,7 @@ import { CodeHunt, type CodeHuntApi, type SelectionInfo, type ViewportInfo } fro
 import { HowToPlay } from "@/components/how-to-play";
 import { useHudFx } from "@/components/hud-fx";
 import { Radar } from "@/components/radar";
-import { ThemeSelect } from "@/components/theme-select";
+import { SettingsMenu } from "@/components/settings-menu";
 import {
   LEVELS,
   PENALTY_MS,
@@ -22,9 +22,9 @@ import {
   saveBest,
 } from "@/lib/game";
 import { generateHaystack } from "@/lib/java-gen";
-import { setSfxEnabled, sfxSurrender, sfxTick, sfxWin, sfxWrong, useSfxEnabled } from "@/lib/sfx";
+import { sfxSurrender, sfxTick, sfxWin, sfxWrong } from "@/lib/sfx";
 import { useThemeId } from "@/lib/theme-store";
-import { setVimEnabled, useVimEnabled } from "@/lib/vim-store";
+import { useVimEnabled } from "@/lib/vim-store";
 
 const searchSchema = z.object({
   lines: z.coerce.number().int().min(50).max(1_000_000).catch(100_000),
@@ -46,7 +46,6 @@ function Play() {
   const { lines, seed, t: sharedMs, w: sharedWrong } = Route.useSearch();
   const navigate = useNavigate();
   const themeId = useThemeId();
-  const sfxOn = useSfxEnabled();
   const vimOn = useVimEnabled();
   const fx = useHudFx(themeId);
   const haystack = useMemo(() => generateHaystack(lines, seed), [lines, seed]);
@@ -473,25 +472,11 @@ function Play() {
           <span className="hidden sm:inline">seed {seed}</span>
         </div>
         <div className="order-3 flex w-full flex-nowrap items-center justify-between gap-x-1 sm:order-2 sm:w-auto sm:justify-end">
-          <ThemeSelect />
-        <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5">
+          <SettingsMenu />
           <Button variant="outline" size="xs" onClick={openHelp} aria-keyshortcuts="?" title="How to play (?)">
             <span className="font-mono">?</span>
             <span className="hidden sm:inline">Help</span>
-          </Button>
-          <Button variant="ghost" size="xs" onClick={() => setSfxEnabled(!sfxOn)} aria-pressed={sfxOn} title={sfxOn ? "Sound on" : "Sound off"}>
-            <span className="sm:hidden">{sfxOn ? "SFX" : "SFX off"}</span>
-            <span className="hidden sm:inline">{sfxOn ? "Sound: on" : "Sound: off"}</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => setVimEnabled(!vimOn)}
-            aria-pressed={vimOn}
-            title="Vim keys: hjkl, w/b, gg/G, Ctrl-d/u, visual mode. Search and ex are disabled."
-          >
-            <span className="sm:hidden">Vim</span>
-            <span className="hidden sm:inline">{vimOn ? "Vim: on" : "Vim: off"}</span>
           </Button>
           <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
             <span className="sm:hidden">Reveal</span>
