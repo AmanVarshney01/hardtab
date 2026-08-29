@@ -15,6 +15,10 @@
   <a href="https://hardtab.amanv.dev"><strong>▶ Play at hardtab.amanv.dev</strong></a>
 </p>
 
+<p align="center">
+  Built with <a href="https://better-t-stack.dev"><strong>Better-T-Stack</strong></a> — one command scaffolded the whole thing.
+</p>
+
 ---
 
 ## What this is
@@ -71,9 +75,21 @@ No AI, no templates on disk — `apps/web/src/lib/java-gen.ts` is a seeded Mad L
 
 100,000 lines in ~80 ms.
 
+## Built with Better-T-Stack
+
+The entire project — Bun workspace, Vite + React 19 + TanStack Router app, Tailwind v4, shadcn-style UI package, typed env, and Cloudflare deployment via Alchemy — came out of a single [Better-T-Stack](https://better-t-stack.dev) command:
+
+```sh
+bun create better-t-stack@latest hardtab \
+  --frontend tanstack-router --backend none --database none \
+  --web-deploy cloudflare --package-manager bun
+```
+
+From there it was `bun run dev` and writing the game. If you want the same setup, pick your options at [better-t-stack.dev](https://better-t-stack.dev) and it hands you the command.
+
 ## Stack
 
-- [better-t-stack](https://better-t-stack.dev) scaffold · Bun · Vite · React 19 · TanStack Router · Tailwind v4
+- [**Better-T-Stack**](https://better-t-stack.dev) — the scaffold: Bun · Vite · React 19 · TanStack Router · Tailwind v4 · Alchemy
 - [CodeMirror 6](https://codemirror.net) (no `@codemirror/search`, on purpose) · [`@replit/codemirror-vim`](https://github.com/replit/codemirror-vim)
 - [vgpu](https://vgpu.sh) for WebGPU effects
 - Cloudflare Workers via [Alchemy](https://alchemy.run) · [takumi](https://takumi.kane.tw) (wasm) for OG images · HTMLRewriter for per-URL meta
