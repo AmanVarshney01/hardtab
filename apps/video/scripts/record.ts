@@ -191,7 +191,12 @@ async function main() {
 
   // 6. Walk it with the arrow keys.
   await page.mouse.click(coords.x0 + 1, coords.y);
-  await page.keyboard.press("Home");
+  // Not Home: CodeMirror's Home is smart and jumps to the end of the indent.
+  await page.evaluate((line) => {
+    const view = (window as unknown as { __view: { state: { doc: { line(n: number): { from: number } } }; dispatch(t: unknown): void; focus(): void } }).__view;
+    view.dispatch({ selection: { anchor: view.state.doc.line(line).from } });
+    view.focus();
+  }, hay.tabLine);
   await page.waitForTimeout(500);
   mark("arrows-start");
   for (let i = 0; i < coords.indent; i++) {
