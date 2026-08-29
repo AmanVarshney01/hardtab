@@ -87,8 +87,8 @@ async function main() {
   console.log(`chromium ${headless ? "headless" : "headed"} with WebGPU`);
   const context = await browser.newContext({
     viewport: { width: W, height: H },
-    deviceScaleFactor: 1,
-    recordVideo: { dir: TMP, size: { width: W, height: H } },
+    deviceScaleFactor: 2,
+    recordVideo: { dir: TMP, size: { width: W * 2, height: H * 2 } },
     colorScheme: "dark",
   });
   await context.addInitScript(CURSOR_SCRIPT);

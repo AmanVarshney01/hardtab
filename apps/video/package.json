@@ -30,7 +30,7 @@
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc",
     "record": "bun run scripts/record.ts",
-    "render": "remotion render hardtab out/hardtab.mp4"
+    "render": "remotion render hardtab out/hardtab-4k.mp4 --crf 14 --concurrency 4"
   },
   "sideEffects": [
     "*.css"

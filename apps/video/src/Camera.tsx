@@ -27,8 +27,10 @@ export const Camera: React.FC<Shot> = ({ src, scale, focus, easing }) => {
     easing: ease,
   });
   const s = scale[0] + (scale[1] - scale[0]) * t;
-  const fx = focus[0][0] + (focus[1][0] - focus[0][0]) * t;
-  const fy = focus[0][1] + (focus[1][1] - focus[0][1]) * t;
+  // Focus points are authored in 1920x1080 space; scale to the composition.
+  const k = width / 1920;
+  const fx = (focus[0][0] + (focus[1][0] - focus[0][0]) * t) * k;
+  const fy = (focus[0][1] + (focus[1][1] - focus[0][1]) * t) * k;
   // Translate so that (fx, fy) lands on the frame centre after scaling.
   const tx = width / 2 - fx * s;
   const ty = height / 2 - fy * s;

@@ -10,8 +10,8 @@ export const RemotionRoot: React.FC = () => {
       component={HardtabVideo}
       durationInFrames={totalFrames(FPS)}
       fps={FPS}
-      width={1920}
-      height={1080}
+      width={3840}
+      height={2160}
     />
   );
 };

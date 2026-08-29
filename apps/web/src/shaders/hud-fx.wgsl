@@ -1,5 +1,5 @@
-// Screen overlay for the play screen: scanlines, vignette, grain,
-// a red shockwave on a strike and an amber bloom on a win.
+// Screen overlay for the play screen: a faint vignette, a red shockwave on
+// a strike and an amber bloom on a win.
 // Output is premultiplied alpha, drawn over the DOM.
 
 struct Params {
@@ -30,31 +30,9 @@ fn hash21(v: vec2f) -> f32 {
   var rgb = vec3f(0.0);
   var a = 0.0;
 
-  // Scanlines: darken every other device row a touch.
-  let sl = 0.5 + 0.5 * sin(px.y * 3.14159265 / (1.6 * dpr));
-  let scan = (1.0 - sl) * mix(0.05, 0.11, p.dark);
-  a += scan;
-
-  // Vignette toward the corners.
+  // A faint vignette so the corners sit back; nothing else at rest.
   let v = length((uv - 0.5) * vec2f(1.25, 1.0));
-  let vig = smoothstep(0.55, 1.1, v) * mix(0.18, 0.32, p.dark);
-  a += vig * (1.0 - a);
-
-  if (p.motion > 0.5) {
-    // Grain.
-    let g = (hash21(px + fract(p.time) * 311.0) - 0.5) * 0.05;
-    rgb += vec3f(max(g, 0.0));
-    a += abs(g) * 0.5;
-  }
-
-  // Caret row: a faint accent band, like a scanner beam resting on the line.
-  if (p.caret.y >= 0.0) {
-    let band = exp(-abs(px.y - p.caret.y) / (10.0 * dpr));
-    let falloff = exp(-abs(px.x - p.caret.x) / (600.0 * dpr));
-    let c = band * (0.03 + 0.05 * falloff);
-    rgb += p.accent.rgb * c;
-    a += c * 0.35;
-  }
+  a += smoothstep(0.7, 1.15, v) * mix(0.1, 0.18, p.dark);
 
   // Strike: red wash + expanding shockwave ring from the caret.
   if (p.strikeAt >= 0.0) {
