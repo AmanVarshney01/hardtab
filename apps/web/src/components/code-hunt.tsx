@@ -45,6 +45,7 @@ interface CodeHuntProps {
   showWhitespace: boolean;
   themeId: string;
   vimMode: boolean;
+  fontSize: number;
   onSelection: (sel: SelectionInfo) => void;
   onViewport?: (vp: ViewportInfo) => void;
   onClaim: () => void;
@@ -75,6 +76,7 @@ export function CodeHunt({
   showWhitespace,
   themeId,
   vimMode,
+  fontSize,
   onSelection,
   onViewport,
   onClaim,
@@ -226,7 +228,7 @@ export function CodeHunt({
     });
   }, [revealAt]);
 
-  return <div ref={hostRef} className="h-full min-h-0" />;
+  return <div ref={hostRef} className="h-full min-h-0" style={{ "--editor-font-size": `${fontSize}px` } as React.CSSProperties} />;
 }
 
 let vimConfigured = false;

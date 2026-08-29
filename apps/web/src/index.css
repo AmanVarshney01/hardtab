@@ -68,7 +68,7 @@ body {
 /* ---------- CodeMirror ---------- */
 .cm-editor {
   height: 100%;
-  font-size: 13px;
+  font-size: var(--editor-font-size, 13px);
 }
 .cm-editor .cm-scroller {
   font-family: var(--font-mono);

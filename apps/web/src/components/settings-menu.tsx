@@ -2,6 +2,7 @@ import { Button } from "@find-space/ui/components/button";
 import { useEffect, useRef, useState } from "react";
 
 import { ThemeSelect } from "@/components/theme-select";
+import { FONT_DEFAULT, FONT_MAX, FONT_MIN, setFontSize, useFontSize } from "@/lib/font-store";
 import { setSfxEnabled, useSfxEnabled } from "@/lib/sfx";
 import { setVimEnabled, useVimEnabled } from "@/lib/vim-store";
 
@@ -11,6 +12,7 @@ export function SettingsMenu() {
   const ref = useRef<HTMLDivElement>(null);
   const sfxOn = useSfxEnabled();
   const vimOn = useVimEnabled();
+  const fontSize = useFontSize();
 
   useEffect(() => {
     if (!open) return;
@@ -45,6 +47,34 @@ export function SettingsMenu() {
                   <span className="hud-label">Theme</span>
                   <ThemeSelect className="w-full [&_select]:w-full [&_select]:max-w-none [&>span]:hidden" />
                 </label>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex flex-col">
+                    <span className="text-foreground">Code size</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {fontSize}px{fontSize === FONT_DEFAULT ? " · default" : ""}
+                    </span>
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => setFontSize(fontSize - 1)}
+                      disabled={fontSize <= FONT_MIN}
+                      aria-label="Smaller code"
+                    >
+                      A−
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => setFontSize(fontSize + 1)}
+                      disabled={fontSize >= FONT_MAX}
+                      aria-label="Larger code"
+                    >
+                      A+
+                    </Button>
+                  </span>
+                </div>
                 <Row label="Sound" hint="strike blip, win chime" on={sfxOn} onChange={setSfxEnabled} />
                 <Row label="Vim keys" hint="hjkl, counts, visual; / and : disabled" on={vimOn} onChange={setVimEnabled} />
               </div>

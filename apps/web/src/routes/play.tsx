@@ -25,6 +25,7 @@ import { generateHaystack } from "@/lib/java-gen";
 import { sfxSurrender, sfxTick, sfxWin, sfxWrong } from "@/lib/sfx";
 import { useThemeId } from "@/lib/theme-store";
 import { useVimEnabled } from "@/lib/vim-store";
+import { useFontSize } from "@/lib/font-store";
 
 const searchSchema = z.object({
   lines: z.coerce.number().int().min(50).max(1_000_000).catch(100_000),
@@ -47,6 +48,7 @@ function Play() {
   const navigate = useNavigate();
   const themeId = useThemeId();
   const vimOn = useVimEnabled();
+  const fontSize = useFontSize();
   const fx = useHudFx(themeId);
   const haystack = useMemo(() => generateHaystack(lines, seed), [lines, seed]);
 
@@ -354,6 +356,7 @@ function Play() {
           showWhitespace={showWhitespace}
           themeId={themeId}
           vimMode={vimOn}
+          fontSize={fontSize}
           onSelection={onSelection}
           onViewport={onViewport}
           onClaim={claim}
