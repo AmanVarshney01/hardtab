@@ -37,7 +37,7 @@ function describe(p: OgParams, isPlay: boolean) {
     const wrong = p.w ?? 0;
     return {
       title: `Found the tab in ${formatDuration(p.t)}${wrong > 0 ? ` (+${wrong} wrong)` : ""} — ${SITE_NAME}`,
-      description: `Someone found the one tab in ${linesLabel} lines of Java in ${formatDuration(p.t)}. Same haystack, your turn.`,
+      description: `Someone found the one tab in ${linesLabel} lines of Java in ${formatDuration(p.t)}. Same codebase, your turn.`,
     };
   }
   if (isPlay) {

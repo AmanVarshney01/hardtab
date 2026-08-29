@@ -24,6 +24,7 @@ import {
 import { generateHaystack } from "@/lib/java-gen";
 import { setSfxEnabled, sfxSurrender, sfxTick, sfxWin, sfxWrong, useSfxEnabled } from "@/lib/sfx";
 import { useThemeId } from "@/lib/theme-store";
+import { setVimEnabled, useVimEnabled } from "@/lib/vim-store";
 
 const searchSchema = z.object({
   lines: z.coerce.number().int().min(50).max(1_000_000).catch(100_000),
@@ -46,6 +47,7 @@ function Play() {
   const navigate = useNavigate();
   const themeId = useThemeId();
   const sfxOn = useSfxEnabled();
+  const vimOn = useVimEnabled();
   const fx = useHudFx(themeId);
   const haystack = useMemo(() => generateHaystack(lines, seed), [lines, seed]);
 
@@ -97,8 +99,13 @@ function Play() {
         else openHelp();
       }
     };
+    const onHelpEvent = () => (helpOpen ? closeHelp() : openHelp());
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("hardtab:help", onHelpEvent);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("hardtab:help", onHelpEvent);
+    };
   }, [helpOpen, openHelp, closeHelp]);
   const [floaters, setFloaters] = useState<Array<{ key: number; text: string }>>([]);
 
@@ -214,7 +221,7 @@ function Play() {
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(`${window.location.origin}/play?lines=${lines}&seed=${seed}`);
-    toast("Link copied. Same haystack, same tab.");
+    toast("Link copied. Same codebase, same tab.");
   };
 
   const shareUrl = () =>
@@ -222,7 +229,7 @@ function Play() {
   const shareText = () =>
     `I found the tab in ${lines.toLocaleString()} lines of Java in ${formatDuration(finalMs ?? 0)}` +
     (wrong > 0 ? ` with ${wrong} wrong claim${wrong === 1 ? "" : "s"}` : "") +
-    ". Same haystack, your turn:";
+    ". Same codebase, your turn:";
 
   const share = async () => {
     const url = shareUrl();
@@ -347,6 +354,7 @@ function Play() {
           revealAt={revealAt}
           showWhitespace={showWhitespace}
           themeId={themeId}
+          vimMode={vimOn}
           onSelection={onSelection}
           onViewport={onViewport}
           onClaim={claim}
@@ -431,7 +439,7 @@ function Play() {
                   </Button>
                 )}
                 <Button variant={phase === "won" && !cheated ? "ghost" : "default"} onClick={playAgain}>
-                  New haystack
+                  New codebase
                 </Button>
                 <Button variant="ghost" onClick={copyLink}>
                   Copy link
@@ -474,6 +482,16 @@ function Play() {
           <Button variant="ghost" size="xs" onClick={() => setSfxEnabled(!sfxOn)} aria-pressed={sfxOn} title={sfxOn ? "Sound on" : "Sound off"}>
             <span className="sm:hidden">{sfxOn ? "SFX" : "SFX off"}</span>
             <span className="hidden sm:inline">{sfxOn ? "Sound: on" : "Sound: off"}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => setVimEnabled(!vimOn)}
+            aria-pressed={vimOn}
+            title="Vim keys: hjkl, w/b, gg/G, Ctrl-d/u, visual mode. Search and ex are disabled."
+          >
+            <span className="sm:hidden">Vim</span>
+            <span className="hidden sm:inline">{vimOn ? "Vim: on" : "Vim: off"}</span>
           </Button>
           <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
             <span className="sm:hidden">Reveal</span>

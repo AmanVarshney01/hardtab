@@ -19,6 +19,7 @@
     "@find-space/env": "workspace:*",
     "@find-space/ui": "workspace:*",
     "@lezer/highlight": "^1.2.3",
+    "@replit/codemirror-vim": "^6.4.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-router": "^1.170.18",
     "dotenv": "catalog:",

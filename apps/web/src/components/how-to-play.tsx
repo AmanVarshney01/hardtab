@@ -144,7 +144,11 @@ export function HowToPlay({ open, onClose, closeLabel = "Got it" }: HowToPlayPro
               </p>
               <p>
                 <span className="text-foreground">Same seed, same tab</span> — the link you share is the exact
-                haystack you played.
+                codebase you played.
+              </p>
+              <p>
+                <span className="text-foreground">Vim</span> — toggle in the bottom bar. Motions, counts and visual
+                mode work; <Key>⏎</Key> claims; search and <Key>:</Key> are disabled. Nice try.
               </p>
             </div>
 

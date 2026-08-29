@@ -86,7 +86,7 @@ export function OgCard({ lines, t, w }: OgParams) {
         <div tw="mt-8 text-4xl" style={{ color: MUTE }}>
           {linesLabel} lines of Java
           {wrong > 0 ? ` · ${wrong} wrong claim${wrong === 1 ? "" : "s"} (+${wrong * 10}s)` : " · no wrong claims"}
-          {" · same haystack, your turn."}
+          {" · same codebase, your turn."}
         </div>
       </Frame>
     );

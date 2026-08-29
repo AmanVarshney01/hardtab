@@ -1,4 +1,5 @@
 import { defaultKeymap } from "@codemirror/commands";
+import { Vim, vim } from "@replit/codemirror-vim";
 import { java } from "@codemirror/lang-java";
 import { Compartment, EditorState, StateEffect, StateField, countColumn, type Range } from "@codemirror/state";
 import {
@@ -43,6 +44,7 @@ interface CodeHuntProps {
   revealAt: number | null;
   showWhitespace: boolean;
   themeId: string;
+  vimMode: boolean;
   onSelection: (sel: SelectionInfo) => void;
   onViewport?: (vp: ViewportInfo) => void;
   onClaim: () => void;
@@ -67,11 +69,22 @@ const revealField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
-export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, onViewport, onClaim, apiRef }: CodeHuntProps) {
+export function CodeHunt({
+  doc,
+  revealAt,
+  showWhitespace,
+  themeId,
+  vimMode,
+  onSelection,
+  onViewport,
+  onClaim,
+  apiRef,
+}: CodeHuntProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const whitespaceCompartment = useRef(new Compartment());
   const themeCompartment = useRef(new Compartment());
+  const vimCompartment = useRef(new Compartment());
   const onSelectionRef = useRef(onSelection);
   const onClaimRef = useRef(onClaim);
   const onViewportRef = useRef(onViewport);
@@ -86,6 +99,9 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
     const state = EditorState.create({
       doc,
       extensions: [
+        // Vim must precede every other keymap. Claim is mapped to Enter
+        // inside Vim (see vimExtension); search and ex are unmapped.
+        vimCompartment.current.of(vimMode ? vimExtension() : []),
         lineNumbers(),
         highlightActiveLine(),
         highlightActiveLineGutter(),
@@ -146,6 +162,7 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
 
     const view = new EditorView({ state, parent: host });
     viewRef.current = view;
+    claimHandlers.set(view, () => onClaimRef.current());
     if (apiRef) {
       apiRef.current = {
         coordsAt(pos) {
@@ -192,6 +209,13 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
+    view.dispatch({ effects: vimCompartment.current.reconfigure(vimMode ? vimExtension() : []) });
+    view.focus();
+  }, [vimMode]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
     if (revealAt === null) {
       view.dispatch({ effects: revealEffect.of(null) });
       return;
@@ -204,3 +228,30 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
 
   return <div ref={hostRef} className="h-full min-h-0" />;
 }
+
+let vimConfigured = false;
+/** Vim keys, minus anything that could search for the tab. Enter claims. */
+function vimExtension() {
+  if (!vimConfigured) {
+    vimConfigured = true;
+    // mapCommand entries take precedence over the built-in keymap, so
+    // search / ex / word-search become no-ops (and ? opens the briefing).
+    Vim.defineAction("hardtabNoop", () => {});
+    Vim.defineAction("hardtabHelp", () => window.dispatchEvent(new CustomEvent("hardtab:help")));
+    for (const key of ["/", ":", "*", "#", "n", "N", "&", "g/"]) {
+      for (const ctx of ["normal", "visual"]) {
+        Vim.mapCommand(key, "action", "hardtabNoop", {}, { context: ctx });
+      }
+    }
+    for (const ctx of ["normal", "visual"]) Vim.mapCommand("?", "action", "hardtabHelp", {}, { context: ctx });
+    Vim.defineAction("hardtabClaim", (cm: unknown) => {
+      const view = (cm as { cm6?: EditorView }).cm6;
+      if (view) claimHandlers.get(view)?.();
+    });
+    Vim.mapCommand("<CR>", "action", "hardtabClaim", {}, { context: "normal" });
+    Vim.mapCommand("<CR>", "action", "hardtabClaim", {}, { context: "visual" });
+  }
+  return vim({ status: true });
+}
+
+const claimHandlers = new WeakMap<EditorView, () => void>();
