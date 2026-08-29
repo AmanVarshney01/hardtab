@@ -23,12 +23,13 @@ const CURSOR_SCRIPT = `
 (() => {
   const c = document.createElement('div');
   c.id = '__cursor';
-  c.innerHTML = '<svg width="28" height="36" viewBox="0 0 28 36"><path d="M3 2 L3 27 L9.5 21 L14 33 L19 31 L14.5 19.5 L23 19 Z" fill="#e9e4d8" stroke="#1c2030" stroke-width="2" stroke-linejoin="round"/></svg>';
+  c.innerHTML = '<svg width="34" height="44" viewBox="0 0 28 36"><path d="M3 2 L3 27 L9.5 21 L14 33 L19 31 L14.5 19.5 L23 19 Z" fill="#e9e4d8" stroke="#1c2030" stroke-width="2" stroke-linejoin="round"/></svg>';
   Object.assign(c.style, { position: 'fixed', left: '0px', top: '0px', zIndex: '2147483647', pointerEvents: 'none', transform: 'translate(-3px,-2px)', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,.6))', display: 'none' });
   const ring = document.createElement('div');
   Object.assign(ring.style, { position: 'fixed', left: '0', top: '0', width: '28px', height: '28px', marginLeft: '-14px', marginTop: '-14px', borderRadius: '9999px', border: '3px solid #f2b544', zIndex: '2147483646', pointerEvents: 'none', opacity: '0', transition: 'transform .35s ease-out, opacity .35s ease-out' });
   document.addEventListener('DOMContentLoaded', () => { document.body.append(c, ring); });
-  window.addEventListener('pointermove', (e) => { c.style.display = 'block'; c.style.left = e.clientX + 'px'; c.style.top = e.clientY + 'px'; ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, true);
+  const z = () => parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+  window.addEventListener('pointermove', (e) => { const k = z(); c.style.display = 'block'; c.style.left = (e.clientX / k) + 'px'; c.style.top = (e.clientY / k) + 'px'; ring.style.left = (e.clientX / k) + 'px'; ring.style.top = (e.clientY / k) + 'px'; }, true);
   window.addEventListener('pointerdown', (e) => { ring.style.transition = 'none'; ring.style.opacity = '1'; ring.style.transform = 'scale(.4)'; requestAnimationFrame(() => { ring.style.transition = 'transform .35s ease-out, opacity .35s ease-out'; ring.style.opacity = '0'; ring.style.transform = 'scale(1.6)'; }); }, true);
 })();
 `;
@@ -171,7 +172,7 @@ async function main() {
 
   // 5. Bring the tab's line into view (quietly), then drag across its indent.
   await page.evaluate(
-    ({ line, targetY }) => {
+    ({ line, targetY, zoom }) => {
       const view = (window as unknown as {
         __view: {
           state: { doc: { line(n: number): { from: number } } };
@@ -183,9 +184,10 @@ async function main() {
       const pos = view.state.doc.line(line).from;
       view.dispatch({ effects: [], selection: { anchor: pos }, scrollIntoView: true });
       const c = view.coordsAtPos(pos);
-      if (c) view.scrollDOM.scrollTop += (c.top + c.bottom) / 2 - targetY;
+      // Client coords are in zoomed pixels; scrollTop is in CSS pixels.
+      if (c) view.scrollDOM.scrollTop += ((c.top + c.bottom) / 2 - targetY) / zoom;
     },
-    { line: hay.tabLine, targetY: H * 0.46 },
+    { line: hay.tabLine, targetY: H * 0.46, zoom: ZOOM },
   );
   await page.waitForTimeout(700);
   const coords = await page.evaluate((line) => {
