@@ -37,15 +37,17 @@ export function SettingsMenu() {
         Settings
       </Button>
       {open && (
-        <div className="hud-panel absolute bottom-full left-0 z-30 mb-2 w-64" role="dialog" aria-label="Settings">
-          <div className="hud-panel-body">
-            <div className="hud-panel-inner flex flex-col gap-3 p-3 font-mono text-xs">
-              <label className="flex flex-col gap-1">
-                <span className="hud-label">Theme</span>
-                <ThemeSelect className="w-full [&_select]:w-full [&_select]:max-w-none [&>span]:hidden" />
-              </label>
-              <Row label="Sound" hint="strike blip, win chime" on={sfxOn} onChange={setSfxEnabled} />
-              <Row label="Vim keys" hint="hjkl, counts, visual; / and : disabled" on={vimOn} onChange={setVimEnabled} />
+        <div className="absolute bottom-full left-0 z-30 mb-2 w-64" role="dialog" aria-label="Settings">
+          <div className="hud-panel">
+            <div className="hud-panel-body">
+              <div className="hud-panel-inner flex flex-col gap-3 p-3 font-mono text-xs">
+                <label className="flex flex-col gap-1">
+                  <span className="hud-label">Theme</span>
+                  <ThemeSelect className="w-full [&_select]:w-full [&_select]:max-w-none [&>span]:hidden" />
+                </label>
+                <Row label="Sound" hint="strike blip, win chime" on={sfxOn} onChange={setSfxEnabled} />
+                <Row label="Vim keys" hint="hjkl, counts, visual; / and : disabled" on={vimOn} onChange={setVimEnabled} />
+              </div>
             </div>
           </div>
         </div>
