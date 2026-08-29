@@ -58,7 +58,7 @@ function Play() {
   const [showWhitespace, setShowWhitespace] = useState(false);
   const [finalMs, setFinalMs] = useState<number | null>(null);
   const [isBest, setIsBest] = useState(false);
-  const [sel, setSel] = useState<SelectionInfo>({ from: 0, to: 0, line: 1, col: 1 });
+  const [sel, setSel] = useState<SelectionInfo>({ from: 0, to: 0, line: 1, col: 1, cols: 0 });
   const selRef = useRef(sel);
   selRef.current = sel;
 
@@ -287,7 +287,7 @@ function Play() {
         {/* Centre: instrument cluster */}
         <div className="order-3 col-span-2 flex items-stretch justify-center gap-2 sm:order-2 sm:col-span-1">
           <Panel
-            className={`w-[7.5rem] sm:w-36 ${wrong > 0 && phase === "playing" ? "is-hot" : ""}`}
+            className={`w-24 shrink-0 sm:w-36 ${wrong > 0 && phase === "playing" ? "is-hot" : ""}`}
             title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}
           >
             <span className="hud-label">Strikes</span>
@@ -297,7 +297,7 @@ function Play() {
               ))}
             </span>
           </Panel>
-          <Panel className={`min-w-[9.5rem] ${phase === "won" ? "is-win" : ""}`} center>
+          <Panel className={`min-w-[8.5rem] shrink-0 sm:min-w-[9.5rem] ${phase === "won" ? "is-win" : ""}`} center>
             <span className="hud-label">Time</span>
             <span
               className={`hud-digits relative block text-2xl leading-none sm:text-3xl ${phase === "won" ? "text-amber" : "text-foreground"}`}
@@ -311,7 +311,7 @@ function Play() {
               ))}
             </span>
           </Panel>
-          <Panel className="w-[7.5rem] sm:w-36">
+          <Panel className="min-w-0 flex-1 sm:w-36 sm:flex-none">
             <span className="hud-label">
               Scanned <span className="ml-1 text-foreground">{scannedPct}%</span>
             </span>
@@ -456,7 +456,11 @@ function Play() {
             Ln {sel.line.toLocaleString()}, Col {sel.col}
           </span>
           <span className={selLen > 0 ? "text-foreground" : ""}>
-            {selLen > 0 ? `${selLen} char${selLen === 1 ? "" : "s"} selected` : "nothing selected"}
+            {selLen === 0
+              ? "nothing selected"
+              : sel.cols === null
+                ? `${selLen} chars selected`
+                : `${selLen} char${selLen === 1 ? "" : "s"} · ${sel.cols} col${sel.cols === 1 ? "" : "s"}`}
           </span>
           <span className="hidden sm:inline">seed {seed}</span>
         </div>

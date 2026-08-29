@@ -1,6 +1,6 @@
 import { defaultKeymap } from "@codemirror/commands";
 import { java } from "@codemirror/lang-java";
-import { Compartment, EditorState, StateEffect, StateField, type Range } from "@codemirror/state";
+import { Compartment, EditorState, StateEffect, StateField, countColumn, type Range } from "@codemirror/state";
 import {
   Decoration,
   type DecorationSet,
@@ -21,6 +21,8 @@ export interface SelectionInfo {
   to: number;
   line: number;
   col: number;
+  /** Visual width of the selection in columns (tabs expanded); null when it spans lines. */
+  cols: number | null;
 }
 
 export interface ViewportInfo {
@@ -122,11 +124,21 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
           if (!u.selectionSet && !u.docChanged && !u.focusChanged) return;
           const main = u.state.selection.main;
           const line = u.state.doc.lineAt(main.head);
+          const fromLine = u.state.doc.lineAt(main.from);
+          let cols: number | null = null;
+          if (main.empty) cols = 0;
+          else if (fromLine.number === u.state.doc.lineAt(main.to).number) {
+            const tab = u.state.tabSize;
+            cols =
+              countColumn(fromLine.text, tab, main.to - fromLine.from) -
+              countColumn(fromLine.text, tab, main.from - fromLine.from);
+          }
           onSelectionRef.current({
             from: main.from,
             to: main.to,
             line: line.number,
             col: main.head - line.from + 1,
+            cols,
           });
         }),
       ],

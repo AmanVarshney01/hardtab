@@ -41,9 +41,9 @@ const TECHNIQUES: Array<{ title: string; body: React.ReactNode; tell: string }> 
     title: "Watch the status bar",
     body: (
       <>
-        The bottom-left readout counts <em>characters</em>, not columns. Select what looks like four spaces: spaces
-        say <span className="font-mono text-foreground">4 chars selected</span>, a tab says{" "}
-        <span className="font-mono text-foreground">1 char selected</span>.
+        The bottom-left readout shows characters and columns. Select what looks like four spaces: spaces say{" "}
+        <span className="font-mono text-foreground">4 chars · 4 cols</span>, a tab says{" "}
+        <span className="font-mono text-foreground">1 char · 4 cols</span>.
       </>
     ),
     tell: "the numbers disagree with your eyes",
@@ -52,11 +52,12 @@ const TECHNIQUES: Array<{ title: string; body: React.ReactNode; tell: string }> 
     title: "Double-click the indent",
     body: (
       <>
-        Double-clicking whitespace selects the whole run. Twelve columns of pure spaces reports 12 chars; twelve
-        columns hiding a tab reports 9.
+        Double-clicking whitespace selects the <em>entire</em> indent — spaces and tab together, that is normal.
+        Now read the status bar: it shows characters <em>and</em> columns. Pure spaces match (12 chars · 12 cols).
+        An indent hiding a tab comes up three short (9 chars · 12 cols).
       </>
     ),
-    tell: "the count comes up short",
+    tell: "chars ≠ cols",
   },
   {
     title: "Click inside the gap",
