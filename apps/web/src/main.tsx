@@ -2,7 +2,10 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import Loader from "./components/loader";
+import { installConsoleBanner } from "./lib/console-banner";
 import { routeTree } from "./routeTree.gen";
+
+installConsoleBanner();
 
 const router = createRouter({
   routeTree,

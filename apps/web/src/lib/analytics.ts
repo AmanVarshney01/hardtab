@@ -32,7 +32,8 @@ export type GameEvent =
   | "font_size"
   | "level_select"
   | "practice_tab_found"
-  | "open_codebase";
+  | "open_codebase"
+  | "devtools_open";
 
 export function track(name: GameEvent, data?: Record<string, Value>) {
   try {
