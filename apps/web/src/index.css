@@ -312,3 +312,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .claim.is-ready, .led.is-lit { animation: none; }
 }
+
+/* The radar is the scrollbar. Hide the native one on the editor. */
+.cm-editor .cm-scroller {
+  scrollbar-width: none;
+}
+.cm-editor .cm-scroller::-webkit-scrollbar {
+  display: none;
+}
