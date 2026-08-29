@@ -259,17 +259,17 @@ function Play() {
       {/* HUD */}
       <header
         key={shakeKey}
-        className={`relative z-10 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-2 pt-2 pb-2 sm:items-stretch sm:px-4 ${shakeKey > 0 ? "hud-shake" : ""}`}
+        className={`relative z-10 grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 px-2 py-2 sm:grid-cols-[1fr_auto_1fr] sm:px-4 ${shakeKey > 0 ? "hud-shake" : ""}`}
       >
-        {/* Brand + objective */}
-        <div className="order-1 flex min-w-0 items-center gap-3">
+        {/* Left: brand + objective */}
+        <div className="order-1 flex min-w-0 items-center gap-3 justify-self-start">
           <Link to="/" className="flex items-baseline gap-1.5 text-foreground hover:text-amber">
             <span className="font-mono text-xs text-amber" aria-hidden>
               \t
             </span>
             <span className="display text-lg">hardtab</span>
           </Link>
-          <Panel className="hidden lg:block">
+          <Panel className="hidden min-w-0 lg:block">
             <span className="hud-label">Objective</span>
             <span className="flex items-center gap-2 truncate font-mono text-xs text-foreground">
               <span className="led is-lit hud-blink" style={{ width: 8, height: 8 }} aria-hidden />
@@ -284,8 +284,47 @@ function Play() {
           </Panel>
         </div>
 
-        {/* Primary action */}
-        <div className="order-2 sm:order-3">
+        {/* Centre: instrument cluster */}
+        <div className="order-3 col-span-2 flex items-stretch justify-center gap-2 sm:order-2 sm:col-span-1">
+          <Panel
+            className={`w-[7.5rem] sm:w-36 ${wrong > 0 && phase === "playing" ? "is-hot" : ""}`}
+            title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}
+          >
+            <span className="hud-label">Strikes</span>
+            <span className="flex h-6 items-center gap-1.5" role="img" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
+              {Array.from({ length: strikeSlots }, (_, i) => (
+                <span key={i} className={`led ${i < wrong ? "is-lit" : ""}`} />
+              ))}
+            </span>
+          </Panel>
+          <Panel className={`min-w-[9.5rem] ${phase === "won" ? "is-win" : ""}`} center>
+            <span className="hud-label">Time</span>
+            <span
+              className={`hud-digits relative block text-2xl leading-none sm:text-3xl ${phase === "won" ? "text-amber" : "text-foreground"}`}
+              aria-live="off"
+            >
+              {formatDurationTenths(elapsed)}
+              {floaters.map((f) => (
+                <span key={f.key} aria-hidden className="hud-float pointer-events-none absolute -top-3 right-0 text-sm text-squiggle">
+                  {f.text}
+                </span>
+              ))}
+            </span>
+          </Panel>
+          <Panel className="w-[7.5rem] sm:w-36">
+            <span className="hud-label">
+              Scanned <span className="ml-1 text-foreground">{scannedPct}%</span>
+            </span>
+            <span className="meter mt-1" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={scannedPct}>
+              {Array.from({ length: segments }, (_, i) => (
+                <span key={i} className={`meter-seg ${i < litSegments ? "is-on" : ""}`} />
+              ))}
+            </span>
+          </Panel>
+        </div>
+
+        {/* Right: primary action */}
+        <div className="order-2 justify-self-end sm:order-3">
           <button
             type="button"
             onClick={claim}
@@ -299,40 +338,6 @@ function Play() {
             </span>
           </button>
         </div>
-
-        {/* Readouts */}
-        <div className="order-3 flex w-full items-stretch gap-2 sm:order-2 sm:w-auto">
-          <Panel className={`flex-1 sm:flex-none ${phase === "won" ? "is-win" : ""}`}>
-            <span className="hud-label">Time</span>
-            <span className={`hud-digits relative block text-xl leading-none sm:text-2xl ${phase === "won" ? "text-amber" : "text-foreground"}`} aria-live="off">
-              {formatDurationTenths(elapsed)}
-              {floaters.map((f) => (
-                <span key={f.key} aria-hidden className="hud-float pointer-events-none absolute -top-3 right-0 text-sm text-squiggle">
-                  {f.text}
-                </span>
-              ))}
-            </span>
-          </Panel>
-          <Panel className={`flex-1 sm:flex-none ${wrong > 0 && phase === "playing" ? "is-hot" : ""}`} title={`${wrong} wrong claim${wrong === 1 ? "" : "s"} · +${(penalty / 1000).toFixed(0)}s`}>
-            <span className="hud-label">Strikes</span>
-            <span className="flex h-6 items-center gap-1.5" role="img" aria-label={`${wrong} strike${wrong === 1 ? "" : "s"}`}>
-              {Array.from({ length: strikeSlots }, (_, i) => (
-                <span key={i} className={`led ${i < wrong ? "is-lit" : ""}`} />
-              ))}
-            </span>
-          </Panel>
-          <Panel className="flex-1 sm:w-40 sm:flex-none">
-            <span className="hud-label">
-              Scanned <span className="ml-1 text-foreground">{scannedPct}%</span>
-            </span>
-            <span className="meter mt-1" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={scannedPct}>
-              {Array.from({ length: segments }, (_, i) => (
-                <span key={i} className={`meter-seg ${i < litSegments ? "is-on" : ""}`} />
-              ))}
-            </span>
-          </Panel>
-        </div>
-
       </header>
 
       {/* Editor + radar */}
@@ -491,11 +496,23 @@ function Play() {
   );
 }
 
-function Panel({ className = "", title, children }: { className?: string; title?: string; children: React.ReactNode }) {
+function Panel({
+  className = "",
+  title,
+  center = false,
+  children,
+}: {
+  className?: string;
+  title?: string;
+  center?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className={`hud-panel ${className}`} title={title}>
       <div className="hud-panel-body h-full">
-        <div className="hud-panel-inner flex h-full min-w-0 flex-col justify-center px-3 py-1.5">{children}</div>
+        <div className={`hud-panel-inner flex h-full min-w-0 flex-col justify-center px-3 py-1.5 ${center ? "items-center text-center" : ""}`}>
+          {children}
+        </div>
       </div>
     </div>
   );
