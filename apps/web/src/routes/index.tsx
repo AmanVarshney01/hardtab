@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { HowToPlay } from "@/components/how-to-play";
+import { track } from "@/lib/analytics";
 import { ThemeSelect } from "@/components/theme-select";
 import { useWhitespaceWall } from "@/components/whitespace-wall";
 import { LEVELS, formatDuration, loadBest, randomSeed } from "@/lib/game";
@@ -28,6 +29,7 @@ function HomeComponent() {
     onFound: () => {
       if (practiceFound) return;
       setPracticeFound(true);
+      track("practice_tab_found");
       toast.success("Practice tab found.", { description: "That one didn't count. The real ones don't glow." });
     },
   });
@@ -64,7 +66,15 @@ function HomeComponent() {
           <span className="display text-2xl leading-none">hardtab</span>
         </span>
         <div className="pointer-events-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="chamfer-sm" onClick={() => setHelpOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="chamfer-sm"
+            onClick={() => {
+              setHelpOpen(true);
+              track("help_open", { source: "landing" });
+            }}
+          >
             <span className="font-mono">?</span> How to play
           </Button>
           <ThemeSelect />
@@ -104,7 +114,10 @@ function HomeComponent() {
                   <button
                     key={level.lines}
                     type="button"
-                    onClick={() => setLines(level.lines)}
+                    onClick={() => {
+                      setLines(level.lines);
+                      track("level_select", { lines: level.lines });
+                    }}
                     aria-pressed={selected}
                     title={`${level.label} — ${level.blurb}`}
                     className={`hud-panel text-left outline-none transition-transform focus-visible:ring-1 focus-visible:ring-amber active:translate-y-px ${
@@ -135,6 +148,7 @@ function HomeComponent() {
             to="/play"
             search={{ lines, seed }}
             className="claim is-ready block w-full outline-none focus-visible:ring-1 focus-visible:ring-amber sm:inline-block sm:w-auto"
+            onClick={() => track("open_codebase", { lines })}
           >
             <span className="claim-body flex h-12 items-center justify-center gap-3 px-4 text-sm sm:h-14 sm:px-7 sm:text-base">
               Open the codebase <span aria-hidden>→</span>

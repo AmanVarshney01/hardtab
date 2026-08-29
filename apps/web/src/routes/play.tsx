@@ -25,6 +25,7 @@ import { generateHaystack } from "@/lib/java-gen";
 import { sfxSurrender, sfxTick, sfxWin, sfxWrong } from "@/lib/sfx";
 import { useThemeId } from "@/lib/theme-store";
 import { useVimEnabled } from "@/lib/vim-store";
+import { track } from "@/lib/analytics";
 import { useFontSize } from "@/lib/font-store";
 
 const searchSchema = z.object({
@@ -79,10 +80,12 @@ function Play() {
   const pausedAtRef = useRef<number | null>(null);
   const openHelp = useCallback(() => {
     if (pausedAtRef.current === null) pausedAtRef.current = Date.now();
+    track("help_open", { source: "manual" });
     setHelpOpen(true);
   }, []);
   const closeHelp = useCallback(() => {
     localStorage.setItem("hardtab:help-seen", "yes");
+    track("help_close", { paused_s: pausedAtRef.current === null ? 0 : Math.round((Date.now() - pausedAtRef.current) / 1000) });
     setHelpOpen(false);
     if (pausedAtRef.current !== null) {
       const paused = Date.now() - pausedAtRef.current;
@@ -92,7 +95,10 @@ function Play() {
   }, []);
   useEffect(() => {
     // First-visit auto-open started the pause before the clock existed.
-    if (helpOpen && pausedAtRef.current === null) pausedAtRef.current = Date.now();
+    if (helpOpen && pausedAtRef.current === null) {
+      pausedAtRef.current = Date.now();
+      track("help_open", { source: "first-visit" });
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
@@ -112,6 +118,7 @@ function Play() {
 
   // Reset everything on a new haystack.
   useEffect(() => {
+    track("game_start", { lines, seed, shared: sharedMs !== undefined, vim: vimOn });
     setPhase("playing");
     setStartedAt(Date.now());
     setPenalty(0);
@@ -190,38 +197,56 @@ function Play() {
       setFinalMs(ms);
       setPhase("won");
       if (!cheated) setIsBest(saveBest(lines, ms));
+      track("game_win", {
+        lines,
+        seed,
+        time_s: Math.round(ms / 1000),
+        wrong,
+        scanned_pct: scannedPct,
+        rank: rankRun({ won: true, cheated, wrong, scannedPct }),
+        cheated,
+        vim: vimOn,
+        shared: sharedMs !== undefined,
+      });
       sfxWin();
       pulse("win");
       toast.success(WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)]);
     } else {
       setPenalty((p) => p + PENALTY_MS);
       setWrong((w) => w + 1);
+      track("claim_wrong", { lines, strike: wrong + 1, elapsed_s: Math.round((Date.now() - startedAt + penalty) / 1000), scanned_pct: scannedPct });
       sfxWrong();
       pulse("wrong", `+${PENALTY_MS / 1000}s`);
       toast.error(WRONG_MESSAGES[Math.floor(Math.random() * WRONG_MESSAGES.length)], {
         description: "Strike. +10s.",
       });
     }
-  }, [phase, haystack.tabOffset, startedAt, penalty, cheated, lines]);
+  }, [phase, haystack.tabOffset, startedAt, penalty, cheated, lines, seed, scannedPct, vimOn, sharedMs, wrong]);
 
   const surrender = () => {
     if (phase !== "playing") return;
     setFinalMs(Date.now() - startedAt + penalty);
     setPhase("surrendered");
+    track("give_up", { lines, elapsed_s: Math.round((Date.now() - startedAt + penalty) / 1000), wrong, scanned_pct: scannedPct });
     sfxSurrender();
   };
 
   const revealWhitespace = () => {
     setShowWhitespace(true);
     setCheated(true);
+    track("whitespace_reveal", { lines, elapsed_s: Math.round((Date.now() - startedAt + penalty) / 1000) });
     sfxTick();
     toast("Whitespace is now visible. This run will not count.", { description: "Coward." });
   };
 
-  const playAgain = () => navigate({ to: "/play", search: { lines, seed: randomSeed() } });
+  const playAgain = () => {
+    track("play_again", { lines, from: phase });
+    navigate({ to: "/play", search: { lines, seed: randomSeed() } });
+  };
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(`${window.location.origin}/play?lines=${lines}&seed=${seed}`);
+    track("copy_link", { lines, phase });
     toast("Link copied. Same codebase, same tab.");
   };
 
@@ -238,12 +263,14 @@ function Play() {
     if (typeof navigator.share === "function") {
       try {
         await navigator.share({ title: "hardtab", text, url });
+        track("share", { method: "native", lines, time_s: Math.round((finalMs ?? 0) / 1000) });
         return;
       } catch {
         // fall through to clipboard
       }
     }
     await navigator.clipboard.writeText(`${text} ${url}`);
+    track("share", { method: "clipboard", lines, time_s: Math.round((finalMs ?? 0) / 1000) });
     toast("Result copied. Paste it somewhere people will judge you.");
   };
 
@@ -435,7 +462,7 @@ function Play() {
                   <Button
                     variant="outline"
                     nativeButton={false}
-                    render={<a href={postUrl()} target="_blank" rel="noreferrer" />}
+                    render={<a href={postUrl()} target="_blank" rel="noreferrer" onClick={() => track("share", { method: "x", lines, time_s: Math.round((finalMs ?? 0) / 1000) })} />}
                   >
                     Post on X
                   </Button>

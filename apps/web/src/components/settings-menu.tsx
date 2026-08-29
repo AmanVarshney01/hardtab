@@ -2,6 +2,7 @@ import { Button } from "@find-space/ui/components/button";
 import { useEffect, useRef, useState } from "react";
 
 import { ThemeSelect } from "@/components/theme-select";
+import { track } from "@/lib/analytics";
 import { FONT_DEFAULT, FONT_MAX, FONT_MIN, setFontSize, useFontSize } from "@/lib/font-store";
 import { setSfxEnabled, useSfxEnabled } from "@/lib/sfx";
 import { setVimEnabled, useVimEnabled } from "@/lib/vim-store";
@@ -32,7 +33,16 @@ export function SettingsMenu() {
 
   return (
     <div ref={ref} className="relative">
-      <Button variant="ghost" size="xs" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="dialog">
+      <Button
+        variant="ghost"
+        size="xs"
+        onClick={() => {
+          if (!open) track("settings_open");
+          setOpen((o) => !o);
+        }}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+      >
         <span className="font-mono" aria-hidden>
           ⚙
         </span>{" "}
@@ -58,7 +68,10 @@ export function SettingsMenu() {
                     <Button
                       variant="outline"
                       size="icon-xs"
-                      onClick={() => setFontSize(fontSize - 1)}
+                      onClick={() => {
+                        setFontSize(fontSize - 1);
+                        track("font_size", { size: fontSize - 1 });
+                      }}
                       disabled={fontSize <= FONT_MIN}
                       aria-label="Smaller code"
                     >
@@ -67,7 +80,10 @@ export function SettingsMenu() {
                     <Button
                       variant="outline"
                       size="icon-xs"
-                      onClick={() => setFontSize(fontSize + 1)}
+                      onClick={() => {
+                        setFontSize(fontSize + 1);
+                        track("font_size", { size: fontSize + 1 });
+                      }}
                       disabled={fontSize >= FONT_MAX}
                       aria-label="Larger code"
                     >
@@ -75,8 +91,8 @@ export function SettingsMenu() {
                     </Button>
                   </span>
                 </div>
-                <Row label="Sound" hint="strike blip, win chime" on={sfxOn} onChange={setSfxEnabled} />
-                <Row label="Vim keys" hint="hjkl, counts, visual; / and : disabled" on={vimOn} onChange={setVimEnabled} />
+                <Row label="Sound" hint="strike blip, win chime" on={sfxOn} onChange={(v) => { setSfxEnabled(v); track("sound_toggle", { on: v }); }} />
+                <Row label="Vim keys" hint="hjkl, counts, visual; / and : disabled" on={vimOn} onChange={(v) => { setVimEnabled(v); track("vim_toggle", { on: v }); }} />
               </div>
             </div>
           </div>
