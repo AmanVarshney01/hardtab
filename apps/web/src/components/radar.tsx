@@ -62,7 +62,6 @@ export function Radar({ scanned, viewport, target, onJump }: RadarProps) {
           style={{ top: `${(i + 1) * 10}%` }}
         />
       ))}
-      <div aria-hidden className="radar-sweep absolute inset-x-0 h-6" />
       {runs.map(([a, b]) => (
         <div
           key={a}

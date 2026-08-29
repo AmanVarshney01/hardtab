@@ -1,4 +1,4 @@
-// Screen overlay for the play screen: scanlines, phosphor sweep, vignette,
+// Screen overlay for the play screen: scanlines, vignette, grain,
 // a red shockwave on a strike and an amber bloom on a win.
 // Output is premultiplied alpha, drawn over the DOM.
 
@@ -40,12 +40,7 @@ fn hash21(v: vec2f) -> f32 {
   let vig = smoothstep(0.55, 1.1, v) * mix(0.18, 0.32, p.dark);
   a += vig * (1.0 - a);
 
-  // Slow phosphor sweep drifting down the screen.
   if (p.motion > 0.5) {
-    let y = fract(p.time * 0.045) * (p.size.y + 200.0 * dpr) - 100.0 * dpr;
-    let band = exp(-abs(px.y - y) / (60.0 * dpr)) * 0.045;
-    rgb += p.accent.rgb * band;
-    a += band * 0.3;
     // Grain.
     let g = (hash21(px + fract(p.time) * 311.0) - 0.5) * 0.05;
     rgb += vec3f(max(g, 0.0));

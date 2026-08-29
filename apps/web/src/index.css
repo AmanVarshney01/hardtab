@@ -302,15 +302,6 @@ body {
     0 0 10px var(--amber),
     inset 0 0 6px color-mix(in srgb, var(--amber) 60%, transparent);
 }
-.radar-sweep {
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--amber) 35%, transparent));
-  animation: radar-sweep 7s linear infinite;
-  pointer-events: none;
-}
-@keyframes radar-sweep {
-  0% { top: -24px; }
-  100% { top: 100%; }
-}
 
 /* Bottom bar */
 .hud-bottom {
@@ -319,5 +310,5 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .claim.is-ready, .radar-sweep, .led.is-lit { animation: none; }
+  .claim.is-ready, .led.is-lit { animation: none; }
 }

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { CodeHunt, type CodeHuntApi, type SelectionInfo, type ViewportInfo } from "@/components/code-hunt";
+import { HowToPlay } from "@/components/how-to-play";
 import { useHudFx } from "@/components/hud-fx";
 import { Radar } from "@/components/radar";
 import { ThemeSelect } from "@/components/theme-select";
@@ -69,6 +70,36 @@ function Play() {
 
   // Feedback pulses (incrementing keys re-trigger CSS animations).
   const [shakeKey, setShakeKey] = useState(0);
+
+  // Help: auto-open on the very first game; pauses the clock while open.
+  const [helpOpen, setHelpOpen] = useState(() => localStorage.getItem("hardtab:help-seen") !== "yes");
+  const pausedAtRef = useRef<number | null>(null);
+  const openHelp = useCallback(() => {
+    if (pausedAtRef.current === null) pausedAtRef.current = Date.now();
+    setHelpOpen(true);
+  }, []);
+  const closeHelp = useCallback(() => {
+    localStorage.setItem("hardtab:help-seen", "yes");
+    setHelpOpen(false);
+    if (pausedAtRef.current !== null) {
+      const paused = Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+      setStartedAt((s) => s + paused);
+    }
+  }, []);
+  useEffect(() => {
+    // First-visit auto-open started the pause before the clock existed.
+    if (helpOpen && pausedAtRef.current === null) pausedAtRef.current = Date.now();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "?" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        if (helpOpen) closeHelp();
+        else openHelp();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [helpOpen, openHelp, closeHelp]);
   const [floaters, setFloaters] = useState<Array<{ key: number; text: string }>>([]);
 
   // Reset everything on a new haystack.
@@ -87,10 +118,10 @@ function Play() {
   }, [haystack]);
 
   useEffect(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || helpOpen) return;
     const id = window.setInterval(() => setNow(Date.now()), 100);
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, [phase, helpOpen]);
 
   const onViewport = useCallback(
     (vp: ViewportInfo) => {
@@ -141,7 +172,7 @@ function Play() {
   };
 
   const claim = useCallback(() => {
-    if (phase !== "playing") return;
+    if (phase !== "playing" || pausedAtRef.current !== null) return;
     const { from, to } = selRef.current;
     const t = haystack.tabOffset;
     const caretAdjacent = from === to && (from === t || from === t + 1);
@@ -238,7 +269,7 @@ function Play() {
             </span>
             <span className="display text-lg">hardtab</span>
           </Link>
-          <Panel className="hidden md:block">
+          <Panel className="hidden lg:block">
             <span className="hud-label">Objective</span>
             <span className="flex items-center gap-2 truncate font-mono text-xs text-foreground">
               <span className="led is-lit hud-blink" style={{ width: 8, height: 8 }} aria-hidden />
@@ -254,7 +285,7 @@ function Play() {
         </div>
 
         {/* Primary action */}
-        <div className="order-2 sm:order-4">
+        <div className="order-2 sm:order-3">
           <button
             type="button"
             onClick={claim}
@@ -302,21 +333,6 @@ function Play() {
           </Panel>
         </div>
 
-        {/* Secondary actions */}
-        <div className="order-4 flex w-full flex-nowrap items-center justify-between gap-x-1 sm:order-3 sm:w-auto sm:justify-end">
-          <ThemeSelect />
-          <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="xs" onClick={() => setSfxEnabled(!sfxOn)} aria-pressed={sfxOn} title={sfxOn ? "Sound on" : "Sound off"}>
-              {sfxOn ? "Sound on" : "Sound off"}
-            </Button>
-            <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
-              Whitespace
-            </Button>
-            <Button variant="ghost" size="xs" onClick={surrender} disabled={phase !== "playing"}>
-              Give up
-            </Button>
-          </div>
-        </div>
       </header>
 
       {/* Editor + radar */}
@@ -426,9 +442,11 @@ function Play() {
         )}
       </div>
 
+      <HowToPlay open={helpOpen} onClose={closeHelp} closeLabel={phase === "playing" ? "Start hunting" : "Got it"} />
+
       {/* Status bar */}
-      <footer className="hud-bottom relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-1 font-mono text-[11px] text-muted-foreground">
-        <div className="flex items-center gap-4">
+      <footer className="hud-bottom relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-2 py-1 font-mono text-[11px] text-muted-foreground sm:px-3">
+        <div className="order-1 flex items-center gap-3 sm:gap-4">
           <span>
             Ln {sel.line.toLocaleString()}, Col {sel.col}
           </span>
@@ -437,7 +455,28 @@ function Play() {
           </span>
           <span className="hidden sm:inline">seed {seed}</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="order-3 flex w-full flex-nowrap items-center justify-between gap-x-1 sm:order-2 sm:w-auto sm:justify-end">
+          <ThemeSelect />
+        <div className="flex items-center gap-0.5">
+          <Button variant="outline" size="xs" onClick={openHelp} aria-keyshortcuts="?" title="How to play (?)">
+            <span className="font-mono">?</span>
+            <span className="hidden sm:inline">Help</span>
+          </Button>
+          <Button variant="ghost" size="xs" onClick={() => setSfxEnabled(!sfxOn)} aria-pressed={sfxOn} title={sfxOn ? "Sound on" : "Sound off"}>
+            <span className="sm:hidden">{sfxOn ? "SFX" : "SFX off"}</span>
+            <span className="hidden sm:inline">{sfxOn ? "Sound: on" : "Sound: off"}</span>
+          </Button>
+          <Button variant="ghost" size="xs" onClick={revealWhitespace} disabled={phase !== "playing" || showWhitespace}>
+            <span className="sm:hidden">Reveal</span>
+            <span className="hidden sm:inline">Whitespace</span>
+          </Button>
+          <Button variant="ghost" size="xs" onClick={surrender} disabled={phase !== "playing"}>
+            <span className="sm:hidden">Quit</span>
+            <span className="hidden sm:inline">Give up</span>
+          </Button>
+        </div>
+        </div>
+        <div className="order-2 flex items-center gap-4 sm:order-3">
           <span className={phase === "playing" ? "" : "text-amber"}>
             {phase === "playing" ? "Spaces: 4" : "Tab Size: 4"}
           </span>

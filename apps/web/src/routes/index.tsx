@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { HowToPlay } from "@/components/how-to-play";
 import { ThemeSelect } from "@/components/theme-select";
 import { useWhitespaceWall } from "@/components/whitespace-wall";
 import { LEVELS, formatDuration, loadBest, randomSeed } from "@/lib/game";
@@ -17,6 +18,7 @@ function HomeComponent() {
   const [seed] = useState(randomSeed);
   const [hover, setHover] = useState(false);
   const [practiceFound, setPracticeFound] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const themeId = useThemeId();
   const best = loadBest();
 
@@ -59,7 +61,10 @@ function HomeComponent() {
           <span className="font-mono text-sm text-amber" aria-hidden>\t</span>
           <span className="display text-2xl leading-none">hardtab</span>
         </span>
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setHelpOpen(true)}>
+            How to play
+          </Button>
           <ThemeSelect />
         </div>
       </header>
@@ -127,6 +132,8 @@ function HomeComponent() {
           </Button>
         </div>
       </section>
+
+      <HowToPlay open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       {/* Status bar */}
       <footer className="pointer-events-none relative z-10 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border bg-ink-2/90 px-3 py-1 font-mono text-[11px] text-muted-foreground backdrop-blur">
