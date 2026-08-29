@@ -11,8 +11,10 @@ import { chromium, type Browser, type Page } from "playwright";
 import { generateHaystack } from "../../web/src/lib/java-gen";
 
 const SITE = process.env.SITE ?? "https://hardtab.amanv.dev";
-const W = 1920;
-const H = 1080;
+// 4K frame; the page is zoomed 200% so it lays out like 1920x1080.
+const W = 3840;
+const H = 2160;
+const ZOOM = 2;
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const OUT = path.resolve(HERE, "../public");
 const TMP = path.resolve(HERE, "../.capture");
@@ -87,11 +89,26 @@ async function main() {
   console.log(`chromium ${headless ? "headless" : "headed"} with WebGPU`);
   const context = await browser.newContext({
     viewport: { width: W, height: H },
-    deviceScaleFactor: 2,
-    recordVideo: { dir: TMP, size: { width: W * 2, height: H * 2 } },
+    deviceScaleFactor: 1,
+    recordVideo: { dir: TMP, size: { width: W, height: H } },
     colorScheme: "dark",
   });
   await context.addInitScript(CURSOR_SCRIPT);
+  await context.addInitScript((zoom: number) => {
+    // Zoom the page so it lays out like 1080p but paints at 4K. Viewport
+    // units don't shrink with zoom, so compensate the ones the site uses.
+    const apply = () => {
+      document.documentElement.style.zoom = String(zoom);
+      if (document.getElementById("__zoomfix")) return;
+      const st = document.createElement("style");
+      st.id = "__zoomfix";
+      const pct = 100 / zoom;
+      st.textContent = `.h-svh{height:${pct}svh!important}.min-h-svh{min-height:${pct}svh!important}.max-h-\\[85svh\\]{max-height:${85 / zoom}svh!important}`;
+      document.head.append(st);
+    };
+    if (document.documentElement && document.head) apply();
+    document.addEventListener("DOMContentLoaded", apply);
+  }, ZOOM);
   const page = await context.newPage();
   const t0 = Date.now();
   const marks: Mark[] = [];
@@ -141,13 +158,13 @@ async function main() {
   // 4. Scroll around like a person.
   await page.mouse.move(W * 0.4, H * 0.5);
   for (let i = 0; i < 6; i++) {
-    await page.mouse.wheel(0, 900);
+    await page.mouse.wheel(0, 900 * ZOOM);
     await page.waitForTimeout(260);
   }
   mark("scrolling");
   await page.waitForTimeout(600);
   for (let i = 0; i < 4; i++) {
-    await page.mouse.wheel(0, 1400);
+    await page.mouse.wheel(0, 1400 * ZOOM);
     await page.waitForTimeout(220);
   }
   await page.waitForTimeout(700);

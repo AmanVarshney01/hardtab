@@ -31,9 +31,11 @@ export const Camera: React.FC<Shot> = ({ src, scale, focus, easing }) => {
   const k = width / 1920;
   const fx = (focus[0][0] + (focus[1][0] - focus[0][0]) * t) * k;
   const fy = (focus[0][1] + (focus[1][1] - focus[0][1]) * t) * k;
-  // Translate so that (fx, fy) lands on the frame centre after scaling.
-  const tx = width / 2 - fx * s;
-  const ty = height / 2 - fy * s;
+  // Translate so that (fx, fy) lands on the frame centre after scaling,
+  // clamped so the footage always covers the whole frame (no blank edges).
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const tx = clamp(width / 2 - fx * s, Math.min(0, width - width * s), 0);
+  const ty = clamp(height / 2 - fy * s, Math.min(0, height - height * s), 0);
   return (
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#1c2030" }}>
       <div
@@ -47,7 +49,7 @@ export const Camera: React.FC<Shot> = ({ src, scale, focus, easing }) => {
           transform: `translate(${tx}px, ${ty}px) scale(${s})`,
         }}
       >
-        <Video src={staticFile(CAPTURE)} trimBefore={Math.round(src * fps)} style={{ width, height }} />
+        <Video src={staticFile(CAPTURE)} trimBefore={Math.round(src * fps)} muted style={{ width, height, display: "block" }} />
       </div>
     </AbsoluteFill>
   );
