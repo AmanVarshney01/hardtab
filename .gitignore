@@ -59,3 +59,8 @@ temp
 
 # Playwright MCP output
 .playwright-mcp
+
+# Remotion video: renders and raw captures are regenerated (bun run record / render)
+apps/video/out
+apps/video/.capture
+apps/video/public/capture.*

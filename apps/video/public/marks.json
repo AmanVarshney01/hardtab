@@ -1,0 +1,68 @@
+{
+  "site": "https://hardtab.amanv.dev",
+  "lines": 5000,
+  "seed": 1326498580,
+  "tabLine": 2338,
+  "marks": [
+    {
+      "name": "landing",
+      "t": 1.479
+    },
+    {
+      "name": "pick-5000",
+      "t": 7.506
+    },
+    {
+      "name": "open-codebase",
+      "t": 8.963
+    },
+    {
+      "name": "start-hunting",
+      "t": 12.364
+    },
+    {
+      "name": "scrolling",
+      "t": 14.059
+    },
+    {
+      "name": "drag-start",
+      "t": 18.358
+    },
+    {
+      "name": "drag-end",
+      "t": 21.665
+    },
+    {
+      "name": "arrows-start",
+      "t": 23.073
+    },
+    {
+      "name": "arrows-end",
+      "t": 26.705
+    },
+    {
+      "name": "strike",
+      "t": 27.921
+    },
+    {
+      "name": "win",
+      "t": 30.237
+    },
+    {
+      "name": "theme-hotdog",
+      "t": 34.776
+    },
+    {
+      "name": "theme-phosphor",
+      "t": 36.389
+    },
+    {
+      "name": "theme-eclipse",
+      "t": 38
+    },
+    {
+      "name": "end",
+      "t": 40.224
+    }
+  ]
+}
