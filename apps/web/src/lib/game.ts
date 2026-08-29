@@ -31,6 +31,29 @@ export function randomSeed() {
   return Math.floor(Math.random() * 2 ** 31);
 }
 
+export function formatDurationTenths(ms: number) {
+  const tenths = Math.floor(Math.max(0, ms) / 100) % 10;
+  return `${formatDuration(ms)}.${tenths}`;
+}
+
+export type Rank = "S" | "A" | "B" | "C" | "F";
+
+export const RANK_COPY: Record<Rank, string> = {
+  S: "Clean sweep. No strikes, barely looked.",
+  A: "No strikes. The linter would hire you.",
+  B: "A strike or two. Acceptable for a Tuesday.",
+  C: "Several strikes. The tab found you.",
+  F: "Did not finish. It's still in there.",
+};
+
+export function rankRun(opts: { won: boolean; cheated: boolean; wrong: number; scannedPct: number }): Rank {
+  if (!opts.won || opts.cheated) return "F";
+  if (opts.wrong === 0 && opts.scannedPct < 25) return "S";
+  if (opts.wrong === 0) return "A";
+  if (opts.wrong <= 2) return "B";
+  return "C";
+}
+
 export function formatDuration(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(total / 60);

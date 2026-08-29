@@ -23,6 +23,16 @@ export interface SelectionInfo {
   col: number;
 }
 
+export interface ViewportInfo {
+  /** 1-based first and last visible lines. */
+  fromLine: number;
+  toLine: number;
+}
+
+export interface CodeHuntApi {
+  scrollToLine(line: number): void;
+}
+
 interface CodeHuntProps {
   doc: string;
   /** Character offset to spotlight (after a win or a surrender). */
@@ -30,7 +40,9 @@ interface CodeHuntProps {
   showWhitespace: boolean;
   themeId: string;
   onSelection: (sel: SelectionInfo) => void;
+  onViewport?: (vp: ViewportInfo) => void;
   onClaim: () => void;
+  apiRef?: React.MutableRefObject<CodeHuntApi | null>;
 }
 
 const revealEffect = StateEffect.define<number | null>();
@@ -51,15 +63,17 @@ const revealField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
-export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, onClaim }: CodeHuntProps) {
+export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, onViewport, onClaim, apiRef }: CodeHuntProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const whitespaceCompartment = useRef(new Compartment());
   const themeCompartment = useRef(new Compartment());
   const onSelectionRef = useRef(onSelection);
   const onClaimRef = useRef(onClaim);
+  const onViewportRef = useRef(onViewport);
   onSelectionRef.current = onSelection;
   onClaimRef.current = onClaim;
+  onViewportRef.current = onViewport;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -96,6 +110,13 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
           ...defaultKeymap,
         ]),
         EditorView.updateListener.of((u) => {
+          if (u.viewportChanged || u.docChanged) {
+            const vp = u.view.viewport;
+            onViewportRef.current?.({
+              fromLine: u.state.doc.lineAt(vp.from).number,
+              toLine: u.state.doc.lineAt(vp.to).number,
+            });
+          }
           if (!u.selectionSet && !u.docChanged && !u.focusChanged) return;
           const main = u.state.selection.main;
           const line = u.state.doc.lineAt(main.head);
@@ -111,12 +132,29 @@ export function CodeHunt({ doc, revealAt, showWhitespace, themeId, onSelection, 
 
     const view = new EditorView({ state, parent: host });
     viewRef.current = view;
+    if (apiRef) {
+      apiRef.current = {
+        scrollToLine(line) {
+          const n = Math.min(Math.max(1, Math.round(line)), view.state.doc.lines);
+          const pos = view.state.doc.line(n).from;
+          view.dispatch({ selection: { anchor: pos }, effects: EditorView.scrollIntoView(pos, { y: "start" }) });
+          view.focus();
+        },
+      };
+    }
     view.focus();
+    // Seed the radar with the initial viewport.
+    onViewportRef.current?.({
+      fromLine: view.state.doc.lineAt(view.viewport.from).number,
+      toLine: view.state.doc.lineAt(view.viewport.to).number,
+    });
 
     return () => {
       view.destroy();
       viewRef.current = null;
+      if (apiRef) apiRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [doc]);
 
   useEffect(() => {
