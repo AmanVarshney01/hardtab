@@ -18,6 +18,27 @@ function Key({ children }: { children: React.ReactNode }) {
 
 const TECHNIQUES: Array<{ title: string; body: React.ReactNode; tell: string }> = [
   {
+    title: "Walk it with the arrow keys",
+    body: (
+      <>
+        Click at the start of a line and tap <Key>→</Key> through the indent. Spaces move the caret one column per
+        press. A tab throws it four columns in one press — you will feel the jump. Hold <Key>Shift</Key> to see it as
+        a growing selection.
+      </>
+    ),
+    tell: "the caret skips",
+  },
+  {
+    title: "Click inside the gap",
+    body: (
+      <>
+        Click in the middle of a suspicious indent. Between spaces the caret lands exactly where you clicked. Inside
+        a tab there is nowhere to land — it snaps to the far left or far right of the gap.
+      </>
+    ),
+    tell: "the caret refuses",
+  },
+  {
     title: "Drag across the indentation",
     body: (
       <>
@@ -26,16 +47,6 @@ const TECHNIQUES: Array<{ title: string; body: React.ReactNode; tell: string }> 
       </>
     ),
     tell: "the highlight jumps",
-  },
-  {
-    title: "Walk it with the arrow keys",
-    body: (
-      <>
-        Click at the start of a line, then tap <Key>→</Key>. Spaces move the caret one column each. A tab throws it
-        four columns in a single press. Hold <Key>Shift</Key> to see it as a growing selection.
-      </>
-    ),
-    tell: "the caret skips",
   },
   {
     title: "Watch the status bar",
@@ -58,16 +69,6 @@ const TECHNIQUES: Array<{ title: string; body: React.ReactNode; tell: string }> 
       </>
     ),
     tell: "chars ≠ cols",
-  },
-  {
-    title: "Click inside the gap",
-    body: (
-      <>
-        Try to put the caret in the middle of a suspicious indent. Between spaces it lands anywhere. Inside a tab
-        there is nowhere to land — it snaps to one side.
-      </>
-    ),
-    tell: "the caret refuses",
   },
   {
     title: "Cover ground",
