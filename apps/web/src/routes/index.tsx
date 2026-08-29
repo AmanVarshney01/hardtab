@@ -161,6 +161,19 @@ function HomeComponent() {
           same place. Ctrl+F only searches what's on screen. Nobody is stopping you from opening devtools, but we
           both know what that says about you.
         </p>
+        <p className="pointer-events-auto mt-4 max-w-prose font-mono text-xs text-muted-foreground">
+          Scaffolded with{" "}
+          <a
+            href="https://better-t-stack.dev"
+            target="_blank"
+            rel="noreferrer"
+            className="text-amber underline-offset-4 hover:underline"
+            onClick={() => track("bts_click")}
+          >
+            Better-T-Stack
+          </a>{" "}
+          — one command, whole project.
+        </p>
       </section>
 
       <HowToPlay open={helpOpen} onClose={() => setHelpOpen(false)} />
@@ -179,6 +192,15 @@ function HomeComponent() {
           </span>
         </div>
         <div className="flex items-center gap-4">
+          <a
+            href="https://better-t-stack.dev"
+            target="_blank"
+            rel="noreferrer"
+            className="pointer-events-auto hidden text-muted-foreground hover:text-amber sm:inline"
+            onClick={() => track("bts_click")}
+          >
+            built with better-t-stack.dev
+          </a>
           <span>Spaces: 4</span>
           <span className="hidden sm:inline">UTF-8</span>
           <span className="hidden sm:inline">Java</span>
